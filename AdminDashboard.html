@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="catalog.css">
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="header.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <div class="headerContainer">
+        <div class="brandContainer">
+            <div class="logoHolder">
+                <!-- Replace the src with your logo file -->
+                <img src="images/image-removebg-preview-removebg-preview.png" alt="GCCI Logo">
+            </div>
+            <div class="textHolder">
+                <h1>GCCI Admin Dashboard</h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <div class="admin-sidebar">
+            <ul class="admin-nav">
+                <li><a href="#" class="active"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="#"><i class="fas fa-box"></i> Inventory</a></li>
+                <li><a href="#"><i class="fas fa-clipboard-check"></i> Reservations</a></li>
+                <li><a href="#"><i class="fas fa-chart-bar"></i> Reports</a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Dashboard Stats -->
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <h3>Total Products</h3>
+                    <div class="value">124</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Pending Reservations</h3>
+                    <div class="value">18</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Low Stock Items</h3>
+                    <div class="value">7</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Reservations</h3>
+                    <div class="value">56</div>
+                </div>
+            </div>
+
+            <!-- Inventory Management Section -->
+            <div class="form-container" id="inventorySection">
+                <h2>Inventory Management</h2>
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active">Product List</button>
+                        <button class="tab-btn">Add New Product</button>
+                    </div>
+                    
+                    <!-- Product List Table -->
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Sample Product</td>
+                                    <td>Electronics</td>
+                                    <td>₱999.99</td>
+                                    <td>15</td>
+                                    <td>
+                                        <button class="btn btn-warning"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-danger"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reservations Section -->
+            <div class="form-container" id="reservationsSection" style="display: none;">
+                <h2>Manage Reservations</h2>
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>John Doe</td>
+                                <td>Sample Product</td>
+                                <td>2</td>
+                                <td>2023-11-05</td>
+                                <td><span class="status status-pending">Pending</span></td>
+                                <td>
+                                    <button class="btn btn-success">Approve</button>
+                                    <button class="btn btn-danger">Deny</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Reports Section -->
+            <div class="form-container" id="reportsSection" style="display: none;">
+                <h2>Reports</h2>
+                <div class="report-filters">
+                    <select class="form-control">
+                        <option>Stock Report</option>
+                        <option>Reservation Report</option>
+                        <option>Sales Report</option>
+                    </select>
+                    <input type="date" class="form-control">
+                    <input type="date" class="form-control">
+                    <button class="btn btn-primary">Generate Report</button>
+                </div>
+                <div class="report-chart">
+                    <!-- Chart will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Navigation
+        document.querySelectorAll('.admin-nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.admin-nav a').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Hide all sections
+                document.querySelectorAll('.form-container').forEach(section => {
+                    section.style.display = 'none';
+                });
+                
+                // Show selected section
+                const sectionId = this.textContent.trim().toLowerCase() + 'Section';
+                document.getElementById(sectionId).style.display = 'block';
+            });
+        });
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
