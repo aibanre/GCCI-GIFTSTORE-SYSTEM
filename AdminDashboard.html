@@ -1,464 +1,613 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard</title>
-    <link rel="stylesheet" href="home.css">
-    <link rel="stylesheet" href="catalog.css">
-    <link rel="stylesheet" href="admin.css">
-    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="home.css" />
+    <link rel="stylesheet" href="catalog.css" />
+    <link rel="stylesheet" href="admin.css" />
+    <link rel="stylesheet" href="header.css" />
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+      integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body>
     <div class="headerContainer">
-        <div class="brandContainer">
-            <div class="logoHolder">
-                <!-- Replace the src with your logo file -->
-                <img src="images/image-removebg-preview-removebg-preview.png" alt="GCCI Logo">
-            </div>
-            <div class="textHolder">
-                <h1>GCCI Admin Dashboard</h1>
-            </div>
+      <div class="brandContainer">
+        <div class="logoHolder">
+          <!-- Replace the src with your logo file -->
+          <img
+            src="images/image-removebg-preview-removebg-preview.png"
+            alt="GCCI Logo"
+          />
         </div>
+        <div class="textHolder">
+          <h1>GCCI Admin Dashboard</h1>
+        </div>
+      </div>
     </div>
 
     <div class="dashboard-container">
-        <!-- Sidebar Navigation -->
-        <div class="admin-sidebar">
-            <ul class="admin-nav">
-                <li><a href="#" class="active"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-                <li><a href="#"><i class="fas fa-cash-register"></i> POS System</a></li>
-                <li><a href="#"><i class="fas fa-box"></i> Inventory</a></li>
-                <li><a href="#"><i class="fas fa-clipboard-check"></i> Reservations</a></li>
-                <li><a href="#"><i class="fas fa-chart-bar"></i> Reports</a></li>
-            </ul>
+      <!-- Sidebar Navigation -->
+      <div class="admin-sidebar">
+        <ul class="admin-nav">
+          <li>
+            <a href="#" class="active"
+              ><i class="fas fa-chart-line"></i> Dashboard</a
+            >
+          </li>
+          <li>
+            <a href="#"><i class="fas fa-cash-register"></i> POS System</a>
+          </li>
+          <li>
+            <a href="#"><i class="fas fa-box"></i> Inventory</a>
+          </li>
+          <li>
+            <a href="#"><i class="fas fa-clipboard-check"></i> Reservations</a>
+          </li>
+          <li>
+            <a href="#"><i class="fas fa-chart-bar"></i> Reports</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="main-content">
+        <!-- Dashboard Stats -->
+        <div id="dashboardSection">
+          <div class="dashboard-stats">
+            <div class="stat-card">
+              <h3>Total Products</h3>
+              <div class="value">124</div>
+            </div>
+            <div class="stat-card">
+              <h3>Pending Reservations</h3>
+              <div class="value">18</div>
+            </div>
+            <div class="stat-card">
+              <h3>Low Stock Items</h3>
+              <div class="value">7</div>
+            </div>
+            <div class="stat-card">
+              <h3>Total Reservations</h3>
+              <div class="value">56</div>
+            </div>
+          </div>
         </div>
 
-        <!-- Main Content Area -->
-        <div class="main-content">
-            <!-- Dashboard Stats -->
-            <div id="dashboardSection">
-            <div class="dashboard-stats">
-                <div class="stat-card">
-                    <h3>Total Products</h3>
-                    <div class="value">124</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Pending Reservations</h3>
-                    <div class="value">18</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Low Stock Items</h3>
-                    <div class="value">7</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Total Reservations</h3>
-                    <div class="value">56</div>
-                </div>
-            </div>
+        <!-- Inventory Management Section -->
+        <div class="form-container" id="inventorySection" style="display: none">
+          <h2>Inventory Management</h2>
+          <div class="tab-container">
+            <div class="tab-buttons">
+              <button class="tab-btn active">Product List</button>
+              <button class="tab-btn">Add New Product</button>
+              <button class="tab-btn">Categories</button>
             </div>
 
-            <!-- Inventory Management Section -->
-            <div class="form-container" id="inventorySection" style="display: none;">
-                <h2>Inventory Management</h2>
-                <div class="tab-container">
-                    <div class="tab-buttons">
-                        <button class="tab-btn active">Product List</button>
-                        <button class="tab-btn">Add New Product</button>
-                        <button class="tab-btn">Categories</button>
-                    </div>
-                    
-                    <!-- Product List Table -->
-                    <div class="tab-content active" id="productListTab">
-                        <div class="data-table">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Product Name</th>
-                                        <th>Category</th>
-                                        <th>Price</th>
-                                        <th>Stock</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Sample Product</td>
-                                        <td>Electronics</td>
-                                        <td>₱999.99</td>
-                                        <td>15</td>
-                                        <td>
-                                            <button class="btn btn-warning"><i class="fas fa-edit"></i></button>
-                                            <button class="btn btn-danger"><i class="fas fa-trash"></i></button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Add New Product Form -->
-                    <div class="tab-content" id="addProductTab" style="display: none;">
-                        <form class="product-form" id="addProductForm">
-                            <div class="form-group">
-                                <label>Product Name:</label>
-                                <input type="text" class="form-control" id="productName" placeholder="Enter product name">
-                            </div>
-                            <div class="form-group">
-                                <label>Category:</label>
-                                <select class="form-control" id="productCategory">
-                                    <option>Select a category</option>
-                                    <option>Books</option>
-                                    <option>Uniform</option>
-                                    <option>College</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Price:</label>
-                                <input type="number" class="form-control" id="productPrice" placeholder="0.00" step="0.01">
-                            </div>
-                            <div class="form-group">
-                                <label>Stock Quantity:</label>
-                                <input type="number" class="form-control" id="productStock" placeholder="0">
-                            </div>
-                            <div class="form-group">
-                                <label>Product Image:</label>
-                                <div class="image-upload-section">
-                                    <input type="file" id="productImageInput" class="form-control" accept="image/*" style="display: none;">
-                                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('productImageInput').click()">
-                                        <i class="fas fa-image"></i> Upload Image
-                                    </button>
-                                    <div id="imagePreview" class="image-preview"></div>
-                                </div>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Add Product</button>
-                                <button type="reset" class="btn btn-secondary">Clear Form</button>
-                            </div>
-                        </form>
-                    </div>
-                    </div>
-
-                    <!-- Category Management -->
-                    <div class="tab-content" id="categoriesTab" style="display: none;">
-                        <div class="category-management">
-                            <h3>Manage Categories</h3>
-                            
-                            <!-- Add New Category Form -->
-                            <div class="category-form-section">
-                                <h4>Add New Category</h4>
-                                <form class="category-form" id="addCategoryForm">
-                                    <div class="form-group">
-                                        <label>Category Name:</label>
-                                        <input type="text" id="categoryName" class="form-control" placeholder="Enter category name">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Description:</label>
-                                        <textarea id="categoryDescription" class="form-control" placeholder="Enter category description" rows="3"></textarea>
-                                    </div>
-                                    <button type="button" class="btn btn-primary" onclick="addCategory()">Add Category</button>
-                                </form>
-                            </div>
-
-                            <!-- Categories List -->
-                            <div class="categories-list-section">
-                                <h4>Active Categories</h4>
-                                <div class="data-table">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Category Name</th>
-                                                <th>Description</th>
-                                                <th>Items Count</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="categoriesTableBody">
-                                            <tr>
-                                                <td>Books</td>
-                                                <td>School books and learning materials</td>
-                                                <td>12</td>
-                                                <td>
-                                                    <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
-                                                    <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Uniform</td>
-                                                <td>School uniforms for all grade levels</td>
-                                                <td>8</td>
-                                                <td>
-                                                    <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
-                                                    <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>College</td>
-                                                <td>College-specific items and merchandise</td>
-                                                <td>5</td>
-                                                <td>
-                                                    <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
-                                                    <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Product List Table -->
+            <div class="tab-content active" id="productListTab">
+              <div class="data-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Product Name</th>
+                      <th>Category</th>
+                      <th>Price</th>
+                      <th>Stock</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Sample Product</td>
+                      <td>Electronics</td>
+                      <td>₱999.99</td>
+                      <td>15</td>
+                      <td>
+                        <button class="btn btn-warning">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            <!-- Reservations Section -->
-            <div class="form-container" id="reservationsSection" style="display: none;">
-                <h2>Manage Reservations</h2>
-                <div class="data-table">
+            <!-- Add New Product Form -->
+            <div class="tab-content" id="addProductTab" style="display: none">
+              <form class="product-form" id="addProductForm">
+                <div class="form-group">
+                  <label>Product Name:</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="productName"
+                    placeholder="Enter product name"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Category:</label>
+                  <select class="form-control" id="productCategory">
+                    <option>Select a category</option>
+                    <option>Books</option>
+                    <option>Uniform</option>
+                    <option>College</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Price:</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="productPrice"
+                    placeholder="0.00"
+                    step="0.01"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Stock Quantity:</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="productStock"
+                    placeholder="0"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Product Image:</label>
+                  <div class="image-upload-section">
+                    <input
+                      type="file"
+                      id="productImageInput"
+                      class="form-control"
+                      accept="image/*"
+                      style="display: none"
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      onclick="document.getElementById('productImageInput').click()"
+                    >
+                      <i class="fas fa-image"></i> Upload Image
+                    </button>
+                    <div id="imagePreview" class="image-preview"></div>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">
+                    Add Product
+                  </button>
+                  <button type="reset" class="btn btn-secondary">
+                    Clear Form
+                  </button>
+                </div>
+              </form>
+            </div>
+            <!-- Category Management -->
+            <div class="tab-content" id="categoriesTab" style="display: none">
+              <div class="category-management">
+                <h4>Add New Category</h4>
+
+                <!-- Add New Category Form -->
+                <div class="category-form-section">
+                  <form class="category-form" id="addCategoryForm">
+                    <div class="form-group">
+                      <label>Category Name:</label>
+                      <input
+                        type="text"
+                        id="categoryName"
+                        class="form-control"
+                        placeholder="Enter category name"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label>Description:</label>
+                      <textarea
+                        id="categoryDescription"
+                        class="form-control"
+                        placeholder="Enter category description"
+                        rows="3"
+                      ></textarea>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn btn-primary"
+                      onclick="addCategory()"
+                    >
+                      Add Category
+                    </button>
+                  </form>
+                </div>
+
+                <!-- Categories List -->
+                <div class="categories-list-section">
+                  <h4>Active Categories</h4>
+                  <div class="data-table">
                     <table>
-                        <thead>
-                            <tr>
-                                <th>Customer</th>
-                                <th>Product</th>
-                                <th>Quantity</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>John Doe</td>
-                                <td>Sample Product</td>
-                                <td>2</td>
-                                <td>2023-11-05</td>
-                                <td><span class="status status-pending">Pending</span></td>
-                                <td>
-                                    <button class="btn btn-success">Approve</button>
-                                    <button class="btn btn-danger">Deny</button>
-                                </td>
-                            </tr>
-                        </tbody>
+                      <thead>
+                        <tr>
+                          <th>Category Name</th>
+                          <th>Description</th>
+                          <th>Items Count</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="categoriesTableBody">
+                        <tr>
+                          <td>Books</td>
+                          <td>School books and learning materials</td>
+                          <td>12</td>
+                          <td>
+                            <button class="btn btn-warning btn-sm">
+                              <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm">
+                              <i class="fas fa-trash"></i> Delete
+                            </button>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Uniform</td>
+                          <td>School uniforms for all grade levels</td>
+                          <td>8</td>
+                          <td>
+                            <button class="btn btn-warning btn-sm">
+                              <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm">
+                              <i class="fas fa-trash"></i> Delete
+                            </button>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>College</td>
+                          <td>College-specific items and merchandise</td>
+                          <td>5</td>
+                          <td>
+                            <button class="btn btn-warning btn-sm">
+                              <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm">
+                              <i class="fas fa-trash"></i> Delete
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
                     </table>
+                  </div>
                 </div>
+              </div>
             </div>
-
-            <!-- Reports Section -->
-            <div class="form-container" id="reportsSection" style="display: none;">
-                <h2>Reports</h2>
-                <div class="report-filters">
-                    <select class="form-control">
-                        <option>Stock Report</option>
-                        <option>Reservation Report</option>
-                        <option>Sales Report</option>
-                    </select>
-                    <input type="date" class="form-control">
-                    <input type="date" class="form-control">
-                    <button class="btn btn-primary">Generate Report</button>
-                </div>
-                <div class="report-chart">
-                    <!-- Chart will be rendered here -->
-                </div>
-            </div>
-
-            <!-- POS System Section -->
-            <div class="form-container" id="posSystemSection" style="display: none;">
-                <h2>Point of Sale (POS) System</h2>
-                
-                <div class="pos-container">
-                    <!-- Product Selection Panel -->
-                    <div class="pos-products-panel">
-                        <h3>Available Products</h3>
-                        <div class="product-search-bar">
-                            <input type="text" id="posProductSearch" class="form-control" placeholder="Search product...">
-                            <select id="posCategoryFilter" class="form-control">
-                                <option value="">All Categories</option>
-                                <option value="books">Books</option>
-                                <option value="uniform">Uniform</option>
-                                <option value="college">College</option>
-                                <option value="senior-high">Senior High</option>
-                                <option value="electronics">Electronics</option>
-                            </select>
-                        </div>
-                        <div class="pos-products-list" id="posProductsList">
-                            <!-- Product items will be generated here -->
-                            <div class="pos-product-item" data-product-id="1" data-name="Sample Product" data-price="999.99" data-stock="15">
-                                <div class="pos-product-info">
-                                    <strong>Sample Product</strong>
-                                    <span class="pos-product-price">₱999.99</span>
-                                    <small>Stock: 15</small>
-                                </div>
-                                <button class="btn btn-primary btn-sm">Add</button>
-                            </div>
-                            <div class="pos-product-item" data-product-id="2" data-name="Book Set" data-price="599.99" data-stock="20">
-                                <div class="pos-product-info">
-                                    <strong>Book Set</strong>
-                                    <span class="pos-product-price">₱599.99</span>
-                                    <small>Stock: 20</small>
-                                </div>
-                                <button class="btn btn-primary btn-sm">Add</button>
-                            </div>
-                            <div class="pos-product-item" data-product-id="3" data-name="Uniform (S)" data-price="1299.99" data-stock="8">
-                                <div class="pos-product-info">
-                                    <strong>Uniform (S)</strong>
-                                    <span class="pos-product-price">₱1,299.99</span>
-                                    <small>Stock: 8</small>
-                                </div>
-                                <button class="btn btn-primary btn-sm">Add</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Transaction Panel -->
-                    <div class="pos-transaction-panel">
-                        <h3>Current Transaction</h3>
-                        
-                        <!-- Cart Items -->
-                        <div class="pos-cart-section">
-                            <h4>Cart Items</h4>
-                            <div class="pos-cart-items" id="posCartItems">
-                                <p class="empty-cart">Cart is empty</p>
-                            </div>
-                        </div>
-
-                        <!-- Transaction Summary -->
-                        <div class="pos-summary">
-                            <div class="summary-row">
-                                <span>Subtotal:</span>
-                                <strong id="posSubtotal">₱0.00</strong>
-                            </div>
-                            <div class="summary-row summary-total">
-                                <span>Total:</span>
-                                <strong id="posTotalAmount">₱0.00</strong>
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="pos-actions">
-                            <button class="btn btn-success btn-block" id="posCompleteTransaction">Complete Purchase</button>
-                            <button class="btn btn-danger btn-block" id="posClearCart">Clear Cart</button>
-                        </div>
-
-                        <!-- Purchase Slip (Hidden by default) -->
-                        <div class="pos-receipt" id="posReceipt" style="display: none;">
-                            <h4>Purchase Slip</h4>
-                            <div id="receiptContent"></div>
-                            <button class="btn btn-primary btn-block" onclick="window.print()">Print Slip</button>
-                            <button class="btn btn-secondary btn-block" id="posCloseReceipt">New Purchase</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
+        <div
+          class="form-container"
+          id="reservationsSection"
+          style="display: none"
+        >
+          <h2>Manage Reservations</h2>
+          <div class="data-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Product</th>
+                  <th>Quantity</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>John Doe</td>
+                  <td>Sample Product</td>
+                  <td>2</td>
+                  <td>2023-11-05</td>
+                  <td><span class="status status-pending">Pending</span></td>
+                  <td>
+                    <button class="btn btn-success">Approve</button>
+                    <button class="btn btn-danger">Deny</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Reports Section -->
+        <div class="form-container" id="reportsSection" style="display: none">
+          <h2>Reports</h2>
+          <div class="report-filters">
+            <select class="form-control">
+              <option>Stock Report</option>
+              <option>Reservation Report</option>
+              <option>Sales Report</option>
+            </select>
+            <input type="date" class="form-control" />
+            <input type="date" class="form-control" />
+            <button class="btn btn-primary">Generate Report</button>
+          </div>
+          <div class="report-chart">
+            <!-- Chart will be rendered here -->
+          </div>
+        </div>
+
+        <!-- POS System Section -->
+        <div class="form-container" id="posSystemSection" style="display: none">
+          <h2>Point of Sale (POS) System</h2>
+
+          <div class="pos-container">
+            <!-- Product Selection Panel -->
+            <div class="pos-products-panel">
+              <h3>Available Products</h3>
+              <div class="product-search-bar">
+                <input
+                  type="text"
+                  id="posProductSearch"
+                  class="form-control"
+                  placeholder="Search product..."
+                />
+                <select id="posCategoryFilter" class="form-control">
+                  <option value="">All Categories</option>
+                  <option value="books">Books</option>
+                  <option value="uniform">Uniform</option>
+                  <option value="college">College</option>
+                  <option value="senior-high">Senior High</option>
+                  <option value="electronics">Electronics</option>
+                </select>
+              </div>
+              <div class="pos-products-list" id="posProductsList">
+                <!-- Product items will be generated here -->
+                <div
+                  class="pos-product-item"
+                  data-product-id="1"
+                  data-name="Sample Product"
+                  data-price="999.99"
+                  data-stock="15"
+                >
+                  <div class="pos-product-info">
+                    <strong>Sample Product</strong>
+                    <span class="pos-product-price">₱999.99</span>
+                    <small>Stock: 15</small>
+                  </div>
+                  <button class="btn btn-primary btn-sm">Add</button>
+                </div>
+                <div
+                  class="pos-product-item"
+                  data-product-id="2"
+                  data-name="Book Set"
+                  data-price="599.99"
+                  data-stock="20"
+                >
+                  <div class="pos-product-info">
+                    <strong>Book Set</strong>
+                    <span class="pos-product-price">₱599.99</span>
+                    <small>Stock: 20</small>
+                  </div>
+                  <button class="btn btn-primary btn-sm">Add</button>
+                </div>
+                <div
+                  class="pos-product-item"
+                  data-product-id="3"
+                  data-name="Uniform (S)"
+                  data-price="1299.99"
+                  data-stock="8"
+                >
+                  <div class="pos-product-info">
+                    <strong>Uniform (S)</strong>
+                    <span class="pos-product-price">₱1,299.99</span>
+                    <small>Stock: 8</small>
+                  </div>
+                  <button class="btn btn-primary btn-sm">Add</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Transaction Panel -->
+            <div class="pos-transaction-panel">
+              <h3>Current Transaction</h3>
+
+              <!-- Cart Items -->
+              <div class="pos-cart-section">
+                <h4>Cart Items</h4>
+                <div class="pos-cart-items" id="posCartItems">
+                  <p class="empty-cart">Cart is empty</p>
+                </div>
+              </div>
+
+              <!-- Transaction Summary -->
+              <div class="pos-summary">
+                <div class="summary-row">
+                  <span>Subtotal:</span>
+                  <strong id="posSubtotal">₱0.00</strong>
+                </div>
+                <div class="summary-row summary-total">
+                  <span>Total:</span>
+                  <strong id="posTotalAmount">₱0.00</strong>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="pos-actions">
+                <button
+                  class="btn btn-success btn-block"
+                  id="posCompleteTransaction"
+                >
+                  Complete Purchase
+                </button>
+                <button class="btn btn-danger btn-block" id="posClearCart">
+                  Clear Cart
+                </button>
+              </div>
+
+              <!-- Purchase Slip (Hidden by default) -->
+              <div class="pos-receipt" id="posReceipt" style="display: none">
+                <h4>Purchase Slip</h4>
+                <div id="receiptContent"></div>
+                <button
+                  class="btn btn-primary btn-block"
+                  onclick="window.print()"
+                >
+                  Print Slip
+                </button>
+                <button
+                  class="btn btn-secondary btn-block"
+                  id="posCloseReceipt"
+                >
+                  New Purchase
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reservations Section -->
     </div>
 
     <script>
-        // Navigation
-        const navLinkMap = {
-            'Dashboard': 'dashboardSection',
-            'POS System': 'posSystemSection',
-            'Inventory': 'inventorySection',
-            'Reservations': 'reservationsSection',
-            'Reports': 'reportsSection'
+      // Navigation
+      const navLinkMap = {
+        Dashboard: "dashboardSection",
+        "POS System": "posSystemSection",
+        Inventory: "inventorySection",
+        Reservations: "reservationsSection",
+        Reports: "reportsSection",
+      };
+
+      document.querySelectorAll(".admin-nav a").forEach((link) => {
+        link.addEventListener("click", function (e) {
+          e.preventDefault();
+          document
+            .querySelectorAll(".admin-nav a")
+            .forEach((l) => l.classList.remove("active"));
+          this.classList.add("active");
+
+          // Hide all sections
+          document.querySelectorAll('[id$="Section"]').forEach((section) => {
+            section.style.display = "none";
+          });
+
+          // Get the text content and map to section ID
+          const linkText = this.textContent.trim();
+          const sectionId = navLinkMap[linkText];
+
+          if (sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+              section.style.display = "block";
+            }
+          }
+        });
+      });
+
+      // Tab switching
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          const container = this.closest(".tab-container");
+          container
+            .querySelectorAll(".tab-btn")
+            .forEach((b) => b.classList.remove("active"));
+          container
+            .querySelectorAll(".tab-content")
+            .forEach((t) => (t.style.display = "none"));
+
+          this.classList.add("active");
+
+          // Show corresponding tab content
+          const tabIndex = Array.from(this.parentElement.children).indexOf(
+            this
+          );
+          const tabContents = container.querySelectorAll(".tab-content");
+          if (tabContents[tabIndex]) {
+            tabContents[tabIndex].style.display = "block";
+          }
+        });
+      });
+
+      // ===== CATEGORY MANAGEMENT =====
+      let categories = [
+        {
+          id: 1,
+          name: "Books",
+          description: "School books and learning materials",
+          itemsCount: 12,
+        },
+        {
+          id: 2,
+          name: "Uniform",
+          description: "School uniforms for all grade levels",
+          itemsCount: 8,
+        },
+        {
+          id: 3,
+          name: "College",
+          description: "College-specific items and merchandise",
+          itemsCount: 5,
+        },
+      ];
+
+      function addCategory() {
+        const nameInput = document.getElementById("categoryName");
+        const descInput = document.getElementById("categoryDescription");
+
+        if (!nameInput.value.trim()) {
+          alert("Please enter a category name");
+          return;
+        }
+
+        const newCategory = {
+          id: Math.max(...categories.map((c) => c.id), 0) + 1,
+          name: nameInput.value.trim(),
+          description: descInput.value.trim(),
+          itemsCount: 0,
         };
 
-        document.querySelectorAll('.admin-nav a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelectorAll('.admin-nav a').forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Hide all sections
-                document.querySelectorAll('[id$="Section"]').forEach(section => {
-                    section.style.display = 'none';
-                });
-                
-                // Get the text content and map to section ID
-                const linkText = this.textContent.trim();
-                const sectionId = navLinkMap[linkText];
-                
-                if (sectionId) {
-                    const section = document.getElementById(sectionId);
-                    if (section) {
-                        section.style.display = 'block';
-                    }
-                }
-            });
-        });
+        categories.push(newCategory);
+        renderCategories();
 
-        // Tab switching
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const container = this.closest('.tab-container');
-                container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                container.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-                
-                this.classList.add('active');
-                
-                // Show corresponding tab content
-                const tabIndex = Array.from(this.parentElement.children).indexOf(this);
-                const tabContents = container.querySelectorAll('.tab-content');
-                if (tabContents[tabIndex]) {
-                    tabContents[tabIndex].style.display = 'block';
-                }
-            });
-        });
+        nameInput.value = "";
+        descInput.value = "";
+        alert("Category added successfully!");
+      }
 
-        // ===== CATEGORY MANAGEMENT =====
-        let categories = [
-            { id: 1, name: 'Books', description: 'School books and learning materials', itemsCount: 12 },
-            { id: 2, name: 'Uniform', description: 'School uniforms for all grade levels', itemsCount: 8 },
-            { id: 3, name: 'College', description: 'College-specific items and merchandise', itemsCount: 5 }
-        ];
+      function deleteCategory(categoryId) {
+        if (confirm("Are you sure you want to delete this category?")) {
+          categories = categories.filter((c) => c.id !== categoryId);
+          renderCategories();
+          alert("Category deleted successfully!");
+        }
+      }
 
-        function addCategory() {
-            const nameInput = document.getElementById('categoryName');
-            const descInput = document.getElementById('categoryDescription');
-            
-            if (!nameInput.value.trim()) {
-                alert('Please enter a category name');
-                return;
-            }
-            
-            const newCategory = {
-                id: Math.max(...categories.map(c => c.id), 0) + 1,
-                name: nameInput.value.trim(),
-                description: descInput.value.trim(),
-                itemsCount: 0
-            };
-            
-            categories.push(newCategory);
+      function editCategory(categoryId) {
+        const category = categories.find((c) => c.id === categoryId);
+        if (category) {
+          const newName = prompt("Edit category name:", category.name);
+          if (newName && newName.trim()) {
+            category.name = newName.trim();
             renderCategories();
-            
-            nameInput.value = '';
-            descInput.value = '';
-            alert('Category added successfully!');
+            alert("Category updated successfully!");
+          }
         }
+      }
 
-        function deleteCategory(categoryId) {
-            if (confirm('Are you sure you want to delete this category?')) {
-                categories = categories.filter(c => c.id !== categoryId);
-                renderCategories();
-                alert('Category deleted successfully!');
-            }
-        }
-
-        function editCategory(categoryId) {
-            const category = categories.find(c => c.id === categoryId);
-            if (category) {
-                const newName = prompt('Edit category name:', category.name);
-                if (newName && newName.trim()) {
-                    category.name = newName.trim();
-                    renderCategories();
-                    alert('Category updated successfully!');
-                }
-            }
-        }
-
-        function renderCategories() {
-            const tbody = document.getElementById('categoriesTableBody');
-            tbody.innerHTML = categories.map(cat => `
+      function renderCategories() {
+        const tbody = document.getElementById("categoriesTableBody");
+        tbody.innerHTML = categories
+          .map(
+            (cat) => `
                 <tr>
                     <td>${cat.name}</td>
                     <td>${cat.description}</td>
@@ -468,17 +617,21 @@
                         <button class="btn btn-danger btn-sm" onclick="deleteCategory(${cat.id})"><i class="fas fa-trash"></i> Delete</button>
                     </td>
                 </tr>
-            `).join('');
-        }
+            `
+          )
+          .join("");
+      }
 
-        // ===== IMAGE UPLOAD PREVIEW =====
-        document.getElementById('productImageInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const preview = document.getElementById('imagePreview');
-                    preview.innerHTML = `
+      // ===== IMAGE UPLOAD PREVIEW =====
+      document
+        .getElementById("productImageInput")
+        .addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+              const preview = document.getElementById("imagePreview");
+              preview.innerHTML = `
                         <div class="preview-container">
                             <img src="${event.target.result}" alt="Product Image Preview">
                             <button type="button" class="btn btn-danger btn-sm" onclick="removeImage()">
@@ -486,139 +639,167 @@
                             </button>
                         </div>
                     `;
-                };
-                reader.readAsDataURL(file);
-            }
+            };
+            reader.readAsDataURL(file);
+          }
         });
 
-        function removeImage() {
-            document.getElementById('productImageInput').value = '';
-            document.getElementById('imagePreview').innerHTML = '';
-        }
+      function removeImage() {
+        document.getElementById("productImageInput").value = "";
+        document.getElementById("imagePreview").innerHTML = "";
+      }
 
-        // ===== ADD PRODUCT FORM SUBMISSION =====
-        document.getElementById('addProductForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('productName').value.trim();
-            const category = document.getElementById('productCategory').value;
-            const price = document.getElementById('productPrice').value;
-            const stock = document.getElementById('productStock').value;
-            const imageInput = document.getElementById('productImageInput');
-            
-            if (!name) {
-                alert('Please enter product name');
-                return;
-            }
-            if (category === 'Select a category') {
-                alert('Please select a category');
-                return;
-            }
-            if (!price || price <= 0) {
-                alert('Please enter a valid price');
-                return;
-            }
-            if (!stock || stock < 0) {
-                alert('Please enter valid stock quantity');
-                return;
-            }
-            if (!imageInput.files.length) {
-                alert('Please upload a product image');
-                return;
-            }
-            
-            alert(`Product "${name}" added successfully!`);
-            this.reset();
-            document.getElementById('imagePreview').innerHTML = '';
+      // ===== ADD PRODUCT FORM SUBMISSION =====
+      document
+        .getElementById("addProductForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const name = document.getElementById("productName").value.trim();
+          const category = document.getElementById("productCategory").value;
+          const price = document.getElementById("productPrice").value;
+          const stock = document.getElementById("productStock").value;
+          const imageInput = document.getElementById("productImageInput");
+
+          if (!name) {
+            alert("Please enter product name");
+            return;
+          }
+          if (category === "Select a category") {
+            alert("Please select a category");
+            return;
+          }
+          if (!price || price <= 0) {
+            alert("Please enter a valid price");
+            return;
+          }
+          if (!stock || stock < 0) {
+            alert("Please enter valid stock quantity");
+            return;
+          }
+          if (!imageInput.files.length) {
+            alert("Please upload a product image");
+            return;
+          }
+
+          alert(`Product "${name}" added successfully!`);
+          this.reset();
+          document.getElementById("imagePreview").innerHTML = "";
         });
 
-        // ===== POS SYSTEM LOGIC =====
-        let cartItems = [];
-        const cart = document.getElementById('posCartItems');
-        const subtotalEl = document.getElementById('posSubtotal');
-        const totalAmountEl = document.getElementById('posTotalAmount');
+      // ===== POS SYSTEM LOGIC =====
+      let cartItems = [];
+      const cart = document.getElementById("posCartItems");
+      const subtotalEl = document.getElementById("posSubtotal");
+      const totalAmountEl = document.getElementById("posTotalAmount");
 
-        // Add product to cart
-        document.querySelectorAll('.pos-product-item .btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                const productItem = e.target.closest('.pos-product-item');
-                const product = {
-                    id: productItem.dataset.productId,
-                    name: productItem.dataset.name,
-                    price: parseFloat(productItem.dataset.price),
-                    quantity: 1
-                };
-                addToCart(product);
-            });
+      // Add product to cart
+      document.querySelectorAll(".pos-product-item .btn").forEach((btn) => {
+        btn.addEventListener("click", function (e) {
+          const productItem = e.target.closest(".pos-product-item");
+          const product = {
+            id: productItem.dataset.productId,
+            name: productItem.dataset.name,
+            price: parseFloat(productItem.dataset.price),
+            quantity: 1,
+          };
+          addToCart(product);
         });
+      });
 
-        function addToCart(product) {
-            const existingItem = cartItems.find(item => item.id === product.id);
-            if (existingItem) {
-                existingItem.quantity++;
-            } else {
-                cartItems.push(product);
-            }
-            updateCart();
+      function addToCart(product) {
+        const existingItem = cartItems.find((item) => item.id === product.id);
+        if (existingItem) {
+          existingItem.quantity++;
+        } else {
+          cartItems.push(product);
         }
+        updateCart();
+      }
 
-        function removeFromCart(productId) {
-            cartItems = cartItems.filter(item => item.id !== productId);
-            updateCart();
+      function removeFromCart(productId) {
+        cartItems = cartItems.filter((item) => item.id !== productId);
+        updateCart();
+      }
+
+      function updateQuantity(productId, newQuantity) {
+        const item = cartItems.find((item) => item.id === productId);
+        if (item) {
+          item.quantity = Math.max(1, newQuantity);
+          updateCart();
         }
+      }
 
-        function updateQuantity(productId, newQuantity) {
-            const item = cartItems.find(item => item.id === productId);
-            if (item) {
-                item.quantity = Math.max(1, newQuantity);
-                updateCart();
-            }
-        }
-
-        function updateCart() {
-            if (cartItems.length === 0) {
-                cart.innerHTML = '<p class="empty-cart">Cart is empty</p>';
-            } else {
-                cart.innerHTML = cartItems.map(item => `
+      function updateCart() {
+        if (cartItems.length === 0) {
+          cart.innerHTML = '<p class="empty-cart">Cart is empty</p>';
+        } else {
+          cart.innerHTML = cartItems
+            .map(
+              (item) => `
                     <div class="cart-item">
                         <div class="cart-item-details">
                             <strong>${item.name}</strong>
-                            <span class="cart-item-price">₱${item.price.toFixed(2)}</span>
+                            <span class="cart-item-price">₱${item.price.toFixed(
+                              2
+                            )}</span>
                         </div>
                         <div class="cart-item-controls">
-                            <button class="qty-btn" onclick="updateQuantity('${item.id}', ${item.quantity - 1})">-</button>
-                            <input type="number" value="${item.quantity}" onchange="updateQuantity('${item.id}', this.value)" class="qty-input">
-                            <button class="qty-btn" onclick="updateQuantity('${item.id}', ${item.quantity + 1})">+</button>
-                            <span class="item-total">₱${(item.price * item.quantity).toFixed(2)}</span>
-                            <button class="btn btn-danger btn-sm" onclick="removeFromCart('${item.id}')"><i class="fas fa-trash"></i></button>
+                            <button class="qty-btn" onclick="updateQuantity('${
+                              item.id
+                            }', ${item.quantity - 1})">-</button>
+                            <input type="number" value="${
+                              item.quantity
+                            }" onchange="updateQuantity('${
+                item.id
+              }', this.value)" class="qty-input">
+                            <button class="qty-btn" onclick="updateQuantity('${
+                              item.id
+                            }', ${item.quantity + 1})">+</button>
+                            <span class="item-total">₱${(
+                              item.price * item.quantity
+                            ).toFixed(2)}</span>
+                            <button class="btn btn-danger btn-sm" onclick="removeFromCart('${
+                              item.id
+                            }')"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-                `).join('');
-            }
-            calculateTotals();
+                `
+            )
+            .join("");
         }
+        calculateTotals();
+      }
 
-        function calculateTotals() {
-            const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const total = subtotal;
+      function calculateTotals() {
+        const subtotal = cartItems.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        );
+        const total = subtotal;
 
-            subtotalEl.textContent = '₱' + subtotal.toFixed(2);
-            totalAmountEl.textContent = '₱' + total.toFixed(2);
-        }
+        subtotalEl.textContent = "₱" + subtotal.toFixed(2);
+        totalAmountEl.textContent = "₱" + total.toFixed(2);
+      }
 
-        // Complete purchase
-        document.getElementById('posCompleteTransaction').addEventListener('click', function() {
-            if (cartItems.length === 0) {
-                alert('Please add items to cart');
-                return;
-            }
+      // Complete purchase
+      document
+        .getElementById("posCompleteTransaction")
+        .addEventListener("click", function () {
+          if (cartItems.length === 0) {
+            alert("Please add items to cart");
+            return;
+          }
 
-            const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const total = subtotal;
+          const subtotal = cartItems.reduce(
+            (sum, item) => sum + item.price * item.quantity,
+            0
+          );
+          const total = subtotal;
 
-            // Generate Purchase Slip
-            const receiptContent = document.getElementById('receiptContent');
-            const receiptHTML = `
+          // Generate Purchase Slip
+          const receiptContent = document.getElementById("receiptContent");
+          const receiptHTML = `
                 <div class="receipt-details">
                     <p><strong>GCCI GIFTSTORE - PURCHASE SLIP</strong></p>
                     <p>Slip #${Date.now()}</p>
@@ -634,14 +815,20 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${cartItems.map(item => `
+                            ${cartItems
+                              .map(
+                                (item) => `
                                 <tr>
                                     <td>${item.name}</td>
                                     <td>${item.quantity}</td>
                                     <td>₱${item.price.toFixed(2)}</td>
-                                    <td>₱${(item.price * item.quantity).toFixed(2)}</td>
+                                    <td>₱${(item.price * item.quantity).toFixed(
+                                      2
+                                    )}</td>
                                 </tr>
-                            `).join('')}
+                            `
+                              )
+                              .join("")}
                         </tbody>
                     </table>
                     <hr>
@@ -653,29 +840,33 @@
                     <p style="text-align: center; font-size: 0.9em;">Thank you for your purchase!</p>
                 </div>
             `;
-            
-            receiptContent.innerHTML = receiptHTML;
-            document.getElementById('posReceipt').style.display = 'block';
-            
-            // Show success message
-            alert('Purchase slip generated successfully!');
+
+          receiptContent.innerHTML = receiptHTML;
+          document.getElementById("posReceipt").style.display = "block";
+
+          // Show success message
+          alert("Purchase slip generated successfully!");
         });
 
-        // Clear cart
-        document.getElementById('posClearCart').addEventListener('click', function() {
-            if (confirm('Are you sure you want to clear the cart?')) {
-                cartItems = [];
-                updateCart();
-                document.getElementById('posReceipt').style.display = 'none';
-            }
-        });
-
-        // Close receipt and start new purchase
-        document.getElementById('posCloseReceipt').addEventListener('click', function() {
+      // Clear cart
+      document
+        .getElementById("posClearCart")
+        .addEventListener("click", function () {
+          if (confirm("Are you sure you want to clear the cart?")) {
             cartItems = [];
             updateCart();
-            document.getElementById('posReceipt').style.display = 'none';
+            document.getElementById("posReceipt").style.display = "none";
+          }
+        });
+
+      // Close receipt and start new purchase
+      document
+        .getElementById("posCloseReceipt")
+        .addEventListener("click", function () {
+          cartItems = [];
+          updateCart();
+          document.getElementById("posReceipt").style.display = "none";
         });
     </script>
-</body>
+  </body>
 </html>

@@ -560,7 +560,8 @@
     margin-bottom: 2rem;
 }
 
-.category-form-section h4 {
+.category-form-section h4, h4{
+    margin-bottom: 1rem;
     margin-top: 0;
     color: #2c3e50;
 }
