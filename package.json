@@ -3,7 +3,6 @@
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "init": "^0.1.2",
-    "nodemon": "^3.1.11",
     "sequelize": "^6.37.7",
     "sequelize-cli": "^6.6.3"
   },
@@ -25,5 +24,8 @@
   "bugs": {
     "url": "https://github.com/aibanre/GCCI-GIFTSTORE-SYSTEM/issues"
   },
-  "homepage": "https://github.com/aibanre/GCCI-GIFTSTORE-SYSTEM#readme"
+  "homepage": "https://github.com/aibanre/GCCI-GIFTSTORE-SYSTEM#readme",
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
 }
