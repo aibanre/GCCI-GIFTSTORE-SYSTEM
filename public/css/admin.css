@@ -1,3 +1,45 @@
+/* Custom Modal for Edit Product */
+.modal-centered {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: rgba(40, 40, 40, 0.28) !important;
+    display: flex !important;
+    z-index: 9999;
+    transition: background 0.2s;
+}
+
+.modal-content-custom {
+    background: #fff !important;
+    border-radius: 14px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.22);
+    padding: 2.5rem 2.5rem 2rem 2.5rem;
+    min-width: 350px;
+    max-width: 95vw;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 2px solid #d0d0d0;
+    z-index: 10000;
+}
+
+.close-modal {
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    font-size: 1.5rem;
+    color: #888;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.close-modal:hover {
+    color: #e74c3c;
+}
 /* Admin Dashboard Styles */
 .dashboard-container {
     display: flex;

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCC Giftstore</title>
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/home.css">
+    <link rel="stylesheet" href="/css/catalog.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <div class="headerContainer">
+        <div class="brandContainer">
+            <div class="logoHolder">
+                <img src="/images/image-removebg-preview-removebg-preview.png" alt="GCCI Logo">
+            </div>
+            <div class="textHolder">    
+                <h1>GCCI Giftstore Catalog</h1>
+            </div>
+        </div>
+        <div class="searchContainer">
+            <input class="searchInput" type="search" placeholder="Search products, categories..." aria-label="Search">
+            <button class="searchButton" aria-label="Search button">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+        </div>
+        <div class="cartContainer" role="button" aria-label="Shopping cart">
+            <i class="fa-solid fa-cart-shopping"></i>
+        </div>
+    </div>
+    <div class="contentContainer">
+        <div class="carousel-section">
+            <h2>Newly Stocked Items</h2>
+            <div class="carousel-container" id="newStockCarousel">
+                <button class="carousel-btn left" id="carouselPrev">&#10094;</button>
+                <div class="carousel-items">
+                    <% if (newProducts && newProducts.length) { %>
+                        <% newProducts.forEach(function(product, idx) { %>
+                        <div class="carousel-item <%= idx === 0 ? 'active' : '' %>">
+                            <img src="<%= product.ImagePath ? '/images/' + product.ImagePath : '/images/sample-product.jpg' %>" alt="<%= product.ItemName %>">
+                            <div class="carousel-caption">
+                                <h4><%= product.ItemName %></h4>
+                                <p>₱<%= product.Price %></p>
+                            </div>
+                        </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="carousel-item active">
+                            <img src="/images/sample-product.jpg" alt="New Item">
+                            <div class="carousel-caption">
+                                <h4>No new products</h4>
+                                <p>₱0.00</p>
+                            </div>
+                        </div>
+                    <% } %>
+                </div>
+                <button class="carousel-btn right" id="carouselNext">&#10095;</button>
+            </div>
+        </div>
+        <div class="catalog-container">
+            <div class="sidebar">
+                <div class="filter-section">
+                    <h3>Categories</h3>
+                    <div class="filter-options">
+                        <% if (categories && categories.length) { %>
+                            <% categories.forEach(function(cat) { %>
+                                <label><input type="checkbox" name="category" value="<%= cat.CategoryID %>"> <%= cat.CategoryName %></label>
+                            <% }); %>
+                        <% } else { %>
+                            <label>No categories found</label>
+                        <% } %>
+                    </div>
+                </div>
+                <div class="filter-section">
+                    <h3>Price Range</h3>
+                    <div class="filter-options">
+                        <label><input type="range" id="priceRange" min="0" max="10000" step="10"></label>
+                        <span id="priceValue">₱0 - ₱10000</span>
+                    </div>
+                </div>
+                <div class="filter-section">
+                    <h3>Stock Status</h3>
+                    <div class="filter-options">
+                        <label><input type="checkbox" name="stock" value="in-stock"> In Stock</label>
+                        <label><input type="checkbox" name="stock" value="low-stock"> Low Stock</label>
+                    </div>
+                </div>
+            </div>
+            <div class="product-grid">
+                <% if (products && products.length) { %>
+                    <% products.forEach(function(product, idx) { %>
+                        <div class="product-card" data-idx="<%= idx %>">
+                            <img src="<%= product.ImagePath ? '/images/' + product.ImagePath : '/images/sample-product.jpg' %>" alt="<%= product.ItemName %>" class="product-image">
+                            <h3 class="product-name"><%= product.ItemName %></h3>
+                            <p class="product-price">₱<%= product.Price %></p>
+                            <p class="stock-count"><%= product.StockQuantity %> in stock</p>
+                            <button class="reserve-btn">Reserve</button>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div>No products found.</div>
+                <% } %>
+            </div>
+        </div>
+        <!-- Product Details Modal -->
+        <div id="productDetailsModal" class="modal-centered" style="display:none;">
+            <div class="modal-content-custom" id="productDetailsContent">
+                <span class="close-modal" id="closeProductDetailsModal">&times;</span>
+                <h3 id="modalProductName"></h3>
+                <img id="modalProductImage" src="" alt="Product Image" style="max-width:220px; margin-bottom:1rem; border-radius:8px;">
+                <p><strong>Price:</strong> <span id="modalProductPrice"></span></p>
+                <p><strong>Stock:</strong> <span id="modalProductStock"></span></p>
+                <p><strong>Category:</strong> <span id="modalProductCategory"></span></p>
+                <p><strong>Description:</strong> <span id="modalProductDescription"></span></p>
+            </div>
+        </div>
+    </div>
+    <script>
+const products = <%- JSON.stringify(products || []) %>;
+const categories = <%- JSON.stringify(categories || []) %>;
+
+        // Carousel functionality
+        const carouselItems = document.querySelectorAll('#newStockCarousel .carousel-item');
+        let currentIndex = 0;
+        function showCarouselItem(index) {
+            carouselItems.forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+        }
+        document.getElementById('carouselPrev').addEventListener('click', () => {
+            currentIndex = (currentIndex - 1 + carouselItems.length) % carouselItems.length;
+            showCarouselItem(currentIndex);
+        });
+        document.getElementById('carouselNext').addEventListener('click', () => {
+            currentIndex = (currentIndex + 1) % carouselItems.length;
+            showCarouselItem(currentIndex);
+        });
+        showCarouselItem(currentIndex);
+
+        // Product modal functionality
+        function getCategoryName(catId) {
+            const cat = categories.find(c => String(c.CategoryID) === String(catId));
+            return cat ? cat.CategoryName : '';
+        }
+        document.querySelectorAll('.product-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                // Prevent reserve button from triggering modal
+                if (e.target.classList.contains('reserve-btn')) return;
+                const idx = card.getAttribute('data-idx');
+                const product = products[idx];
+                if (!product) return;
+                document.getElementById('modalProductName').textContent = product.ItemName;
+                document.getElementById('modalProductImage').src = product.ImagePath ? '/images/' + product.ImagePath : '/images/sample-product.jpg';
+                document.getElementById('modalProductPrice').textContent = '₱' + product.Price;
+                document.getElementById('modalProductStock').textContent = product.StockQuantity + ' in stock';
+                document.getElementById('modalProductCategory').textContent = getCategoryName(product.CategoryID);
+                document.getElementById('modalProductDescription').textContent = product.Description || 'No description.';
+                document.getElementById('productDetailsModal').style.display = 'flex';
+            });
+        });
+        document.getElementById('closeProductDetailsModal').onclick = function() {
+            document.getElementById('productDetailsModal').style.display = 'none';
+        };
+    </script>
+</body>
+</html>

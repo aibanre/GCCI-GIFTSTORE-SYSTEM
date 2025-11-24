@@ -1,10 +1,65 @@
 // Point of Sale (POS) System Logic
 
 let cartItems = [];
+let allPOSProducts = [];
+
+function filterAndRenderPOSProducts() {
+  const categoryFilter = document.getElementById('posCategoryFilter');
+  const searchInput = document.getElementById('posProductSearch');
+  let filtered = allPOSProducts;
+  // Filter by category
+  if (categoryFilter && categoryFilter.value) {
+    filtered = filtered.filter(p => String(p.categoryID) === String(categoryFilter.value));
+  }
+  // Filter by search
+  if (searchInput && searchInput.value.trim() !== '') {
+    const term = searchInput.value.trim().toLowerCase();
+    filtered = filtered.filter(p => p.name.toLowerCase().includes(term));
+  }
+  renderPOSProducts(filtered);
+}
 
 async function initPOS() {
+  await fetchPOSCategories();
   await fetchPOSProducts();
   setupPOSEventListeners();
+
+  // Add event listeners for category filter and search bar
+  const categoryFilter = document.getElementById('posCategoryFilter');
+  if (categoryFilter) {
+    categoryFilter.addEventListener('change', filterAndRenderPOSProducts);
+  }
+  const searchInput = document.getElementById('posProductSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', filterAndRenderPOSProducts);
+  }
+
+// Fetch categories from API and populate POS category dropdown
+async function fetchPOSCategories() {
+  try {
+    const res = await fetch('/api/categories');
+    if (!res.ok) throw new Error('Failed to fetch categories');
+    const categories = await res.json();
+    const categoryFilter = document.getElementById('posCategoryFilter');
+    if (!categoryFilter) return;
+    categoryFilter.innerHTML = '<option value="">All Categories</option>' +
+      categories.map(c => `<option value="${c.CategoryID}">${escapeHtml(c.CategoryName)}</option>`).join('');
+  } catch (err) {
+    console.error('Error fetching POS categories:', err);
+    // Fallback to static options
+    const categoryFilter = document.getElementById('posCategoryFilter');
+    if (categoryFilter) {
+      categoryFilter.innerHTML = `
+        <option value="">All Categories</option>
+        <option value="books">Books</option>
+        <option value="uniform">Uniform</option>
+        <option value="college">College</option>
+        <option value="senior-high">Senior High</option>
+        <option value="electronics">Electronics</option>
+      `;
+    }
+  }
+}
 }
 
 async function fetchPOSProducts() {
@@ -19,10 +74,12 @@ async function fetchPOSProducts() {
           name: p.ItemName ?? p.name ?? '',
           price: Number(p.Price ?? p.price ?? 0) || 0,
           stock: Number(p.StockQuantity ?? p.stock ?? 0) || 0,
+          categoryID: p.CategoryID ?? '',
         }))
       : [];
 
-    renderPOSProducts(products);
+    allPOSProducts = products;
+    filterAndRenderPOSProducts();
   } catch (error) {
     console.error('Error fetching POS products:', error);
     // Fallback to sample data
@@ -47,14 +104,14 @@ function renderPOSProducts(products) {
         <span class="pos-product-price">₱${parseFloat(product.price).toFixed(2)}</span>
         <small>Stock: ${product.stock}</small>
       </div>
-      <button class="btn btn-primary btn-sm" onclick="addToCart('${product.id}', '${escapeHtml(product.name)}', ${product.price})">Add</button>
+      <button class="btn btn-primary btn-sm add-to-cart-btn">Add</button>
     </div>
   `
     )
     .join('');
 
-  // Attach click handlers to newly created buttons
-  document.querySelectorAll('.pos-product-item .btn').forEach((btn) => {
+  // Attach click handlers to newly created buttons (no inline onclick)
+  document.querySelectorAll('.pos-product-item .add-to-cart-btn').forEach((btn) => {
     btn.addEventListener('click', function (e) {
       const productItem = e.target.closest('.pos-product-item');
       if (productItem) {

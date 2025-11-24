@@ -41,22 +41,202 @@ async function fetchProducts() {
     console.log('Rendering', products.length, 'products');
     tbody.innerHTML = products
       .map((p) => {
-        console.log('Mapping product:', p.ItemName);
         return `
         <tr>
           <td>${String(p.ItemName || '')}</td>
-          <td>${String(p.CategoryID || '')}</td>
+          <td>${String(p.CategoryName || '')}</td>
           <td>${String(p.Price || '')}</td>
           <td>${String(p.StockQuantity || '')}</td>
           <td>
-            <button class="btn btn-sm btn-secondary" data-id="${p.ItemID}">Edit</button>
-            <button class="btn btn-sm btn-danger" data-id="${p.ItemID}">Delete</button>
+            <button class="btn btn-warning btn-sm edit-product-btn" data-id="${p.ItemID}"><i class="fas fa-edit"></i> Edit</button>
+            <button class="btn btn-danger btn-sm delete-product-btn" data-id="${p.ItemID}"><i class="fas fa-trash"></i> Delete</button>
           </td>
         </tr>
       `;
       })
       .join('');
+    // Attach event listeners for edit/delete
+    document.querySelectorAll('.edit-product-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = btn.getAttribute('data-id');
+        const product = products.find(p => String(p.ItemID) === String(id));
+        if (product) showEditProductModal(product);
+      });
+    });
+    document.querySelectorAll('.delete-product-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = btn.getAttribute('data-id');
+        if (confirm('Are you sure you want to delete this product?')) {
+          deleteProduct(id);
+        }
+      });
+    });
     console.log('Rendered', products.length, 'products successfully');
+  // Show modal for editing product (styled and centered)
+  function showEditProductModal(product) {
+    let modal = document.getElementById('editProductModal');
+    // Fetch categories for dropdown
+    async function getCategoriesForDropdown() {
+      try {
+        const res = await fetch('/api/categories');
+        if (!res.ok) throw new Error('Failed to fetch categories');
+        return await res.json();
+      } catch (err) {
+        console.error('Error fetching categories for modal:', err);
+        return [];
+      }
+    }
+
+    function renderCategoryDropdown(categories, selectedId) {
+      return `
+        <select id="editProductCategory" class="form-control" required>
+          ${categories.map(cat => `<option value="${cat.CategoryID}"${String(cat.CategoryID) === String(selectedId) ? ' selected' : ''}>${cat.CategoryName}</option>`).join('')}
+        </select>
+      `;
+    }
+
+    async function showModal() {
+      const categories = await getCategoriesForDropdown();
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'editProductModal';
+        modal.className = 'modal-centered';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+          <div class="modal-content-custom">
+            <span class="close-modal" id="closeEditModal">&times;</span>
+            <h3 style="margin-top:0;">Edit Product</h3>
+            <form id="editProductForm">
+              <div class="form-group">
+                <label>Product Name:</label>
+                <input type="text" id="editProductName" class="form-control" value="${product.ItemName}" required>
+              </div>
+              <div class="form-group">
+                <label>Category:</label>
+                ${renderCategoryDropdown(categories, product.CategoryID)}
+              </div>
+              <div class="form-group">
+                <label>Price:</label>
+                <input type="number" id="editProductPrice" class="form-control" value="${product.Price}" step="0.01" required>
+              </div>
+              <div class="form-group">
+                <label>Stock Quantity:</label>
+                <input type="number" id="editProductStock" class="form-control" value="${product.StockQuantity}" required>
+              </div>
+              <div class="form-group">
+                <label>Description:</label>
+                <textarea id="editProductDescription" class="form-control">${product.Description || ''}</textarea>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <button type="button" class="btn btn-secondary" id="cancelEditModal">Cancel</button>
+              </div>
+            </form>
+          </div>
+        `;
+        if (modal.parentNode) modal.parentNode.removeChild(modal);
+        document.body.appendChild(modal);
+      } else {
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+          <div class="modal-content-custom">
+            <span class="close-modal" id="closeEditModal">&times;</span>
+            <h3 style="margin-top:0;">Edit Product</h3>
+            <form id="editProductForm">
+              <div class="form-group">
+                <label>Product Name:</label>
+                <input type="text" id="editProductName" class="form-control" value="${product.ItemName}" required>
+              </div>
+              <div class="form-group">
+                <label>Category:</label>
+                ${renderCategoryDropdown(categories, product.CategoryID)}
+              </div>
+              <div class="form-group">
+                <label>Price:</label>
+                <input type="number" id="editProductPrice" class="form-control" value="${product.Price}" step="0.01" required>
+              </div>
+              <div class="form-group">
+                <label>Stock Quantity:</label>
+                <input type="number" id="editProductStock" class="form-control" value="${product.StockQuantity}" required>
+              </div>
+              <div class="form-group">
+                <label>Description:</label>
+                <textarea id="editProductDescription" class="form-control">${product.Description || ''}</textarea>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <button type="button" class="btn btn-secondary" id="cancelEditModal">Cancel</button>
+              </div>
+            </form>
+          </div>
+        `;
+      }
+      document.getElementById('closeEditModal').onclick = function() {
+        modal.style.display = 'none';
+      };
+      document.getElementById('cancelEditModal').onclick = function() {
+        modal.style.display = 'none';
+      };
+      document.getElementById('editProductForm').onsubmit = function(e) {
+        e.preventDefault();
+        saveProductChanges(product.ItemID);
+      };
+    }
+    showModal();
+  }
+
+  // Save product changes to DB
+  async function saveProductChanges(itemId) {
+    const payload = {
+      ItemName: document.getElementById('editProductName').value.trim(),
+      CategoryID: document.getElementById('editProductCategory').value,
+      Price: document.getElementById('editProductPrice').value,
+      StockQuantity: document.getElementById('editProductStock').value,
+      Description: document.getElementById('editProductDescription').value.trim(),
+      AdminID: null // Optionally set admin ID
+    };
+    try {
+      const res = await fetch(`/api/products/${itemId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        alert('Product updated successfully!');
+        document.getElementById('editProductModal').style.display = 'none';
+        fetchProducts();
+      } else {
+        alert('Failed to update product.');
+        console.error('Update product response:', data);
+      }
+    } catch (err) {
+      alert('Error updating product. See console for details.');
+      console.error('Error updating product:', err);
+    }
+  }
+
+  // Delete product from DB
+  async function deleteProduct(itemId) {
+    try {
+      const res = await fetch(`/api/products/${itemId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ AdminID: null }) // Optionally set AdminID here
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        alert('Product deleted successfully!');
+        fetchProducts();
+      } else {
+        alert('Failed to delete product.');
+        console.error('Delete product response:', data);
+      }
+    } catch (err) {
+      alert('Error deleting product. See console for details.');
+      console.error('Error deleting product:', err);
+    }
+  }
   } catch (err) {
     console.error('Error fetching products:', err);
     console.error('Error message:', err.message);
