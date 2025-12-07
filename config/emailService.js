@@ -3,9 +3,32 @@
 const nodemailer = require('nodemailer');
 const config = require('./config.json');
 
+// Replace ${VAR_NAME} placeholders with environment variables
+function replaceEnvVars(str) {
+  if (typeof str !== 'string') return str;
+  return str.replace(/\$\{([^}]+)\}/g, (match, varName) => {
+    return process.env[varName] || match;
+  });
+}
+
 // Get current environment (default to development)
 const env = process.env.NODE_ENV || 'development';
-const emailConfig = config[env]?.email;
+let emailConfig = config[env]?.email;
+
+// Replace environment variables in email config
+if (emailConfig) {
+  emailConfig = {
+    service: replaceEnvVars(emailConfig.service),
+    user: replaceEnvVars(emailConfig.user),
+    password: replaceEnvVars(emailConfig.password),
+    from: replaceEnvVars(emailConfig.from)
+  };
+  console.log('Email config loaded:', { 
+    service: emailConfig.service, 
+    user: emailConfig.user,
+    hasPassword: !!emailConfig.password 
+  });
+}
 
 let transporter = null;
 
