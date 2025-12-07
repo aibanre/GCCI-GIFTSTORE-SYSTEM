@@ -39,6 +39,12 @@ function initializeTransporter() {
     return null;
   }
 
+  // Skip email initialization in production if credentials contain placeholders
+  if (emailConfig.user.includes('${') || emailConfig.password.includes('${')) {
+    console.warn('Email credentials not configured (environment variables not set). Email sending disabled.');
+    return null;
+  }
+
   try {
     transporter = nodemailer.createTransport({
       service: emailConfig.service || 'gmail',

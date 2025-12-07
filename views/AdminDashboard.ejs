@@ -276,9 +276,30 @@
         </div>
 
         <!-- Inventory Management Section -->
-        <div class="form-container hidden" id="inventorySection">
-          <div style="margin-bottom: 2rem;">
+        <div class="form-container hidden" id="inventorySection" >
+          <div style="margin-bottom: 2rem">
             <h2 style="font-size: 1.75rem; color: #2c3e50; margin: 0 0 0.5rem 0; font-weight: 600;"><i class="fas fa-box" style="margin-right: 0.75rem; color: #2a6b52;"></i>Inventory Management</h2>
+            <!-- Global Settings Panel -->
+            <div style="background: #fff3cd; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 2rem; border-left: 4px solid #f39c12;">
+              <h3 style="margin: 0 0 1rem 0; color: #2c3e50; font-size: 1.1rem; font-weight: 600;">
+                <i class="fas fa-cog" style="margin-right: 0.5rem; color: #f39c12;"></i>Global Reservation Settings
+              </h3>
+              <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center;">
+                <div>
+                  <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">
+                    Global Minimum Reservation Stock
+                    <i class="fas fa-info-circle" title="Default minimum stock for all items. Individual items can override this." style="color: #3498db; cursor: help; margin-left: 0.25rem;"></i>
+                  </label>
+                  <input type="number" id="globalMinReservationStock" class="form-control" value="2" min="0" style="max-width: 150px; padding: 0.7rem; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem;">
+                  <small style="color: #7f8c8d; font-size: 0.85rem; margin-top: 0.25rem; display: block;">
+                    Items at or below this stock cannot be reserved (unless item has custom threshold)
+                  </small>
+                </div>
+                <button type="button" id="saveGlobalSettingsBtn" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 500; height: fit-content;">
+                  <i class="fas fa-save" style="margin-right: 0.5rem;"></i>Save Setting
+                </button>
+              </div>
+            </div>
           </div>
           <div class="tab-container">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
@@ -403,27 +424,7 @@
               </div>
             </div>
 
-            <!-- Global Settings Panel -->
-            <div style="background: #fff3cd; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 2rem; border-left: 4px solid #f39c12;">
-              <h3 style="margin: 0 0 1rem 0; color: #2c3e50; font-size: 1.1rem; font-weight: 600;">
-                <i class="fas fa-cog" style="margin-right: 0.5rem; color: #f39c12;"></i>Global Reservation Settings
-              </h3>
-              <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center;">
-                <div>
-                  <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">
-                    Global Minimum Reservation Stock
-                    <i class="fas fa-info-circle" title="Default minimum stock for all items. Individual items can override this." style="color: #3498db; cursor: help; margin-left: 0.25rem;"></i>
-                  </label>
-                  <input type="number" id="globalMinReservationStock" class="form-control" value="2" min="0" style="max-width: 150px; padding: 0.7rem; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem;">
-                  <small style="color: #7f8c8d; font-size: 0.85rem; margin-top: 0.25rem; display: block;">
-                    Items at or below this stock cannot be reserved (unless item has custom threshold)
-                  </small>
-                </div>
-                <button type="button" id="saveGlobalSettingsBtn" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 500; height: fit-content;">
-                  <i class="fas fa-save" style="margin-right: 0.5rem;"></i>Save Setting
-                </button>
-              </div>
-            </div>
+            
 
             <!-- Add New Product Tab -->
             <div class="tab-content" id="addProductTab">
@@ -573,7 +574,6 @@
                       <form id="addVariantForm">
                         <div style="display:flex; flex-wrap:wrap; gap:0.75rem;">
                           <input type="text" class="form-control" id="variantSize" placeholder="Size (e.g. S, M, L)" style="flex:1 1 120px;" required />
-                          <input type="text" class="form-control" id="variantSKU" placeholder="SKU (optional)" style="flex:1 1 140px;" />
                           <input type="number" step="0.01" class="form-control" id="variantPrice" placeholder="Price override (optional)" style="flex:1 1 150px;" />
                           <input type="number" class="form-control" id="variantStock" placeholder="Stock" style="flex:1 1 100px;" required />
                         </div>
