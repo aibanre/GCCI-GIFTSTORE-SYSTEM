@@ -1,5 +1,22 @@
 const { sendReservationEmail, sendCancellationEmail, sendClaimDeadlineEmail } = require('../config/emailService');
 
+// Use native bcrypt if available; fallback to bcryptjs for portability
+let bcrypt;
+try { 
+    bcrypt = require('bcrypt'); 
+} catch (e) {
+    try { 
+        bcrypt = require('bcryptjs'); 
+        console.warn('Fallback to bcryptjs (native bcrypt not installed).'); 
+    } catch (e2) {
+        console.error('No bcrypt implementation available. Install bcrypt or bcryptjs.');
+        bcrypt = { 
+            hash: async () => { throw new Error('bcrypt unavailable'); }, 
+            compare: async () => false 
+        };
+    }
+}
+
 // Helper function to calculate claim deadline (2 business days, excluding weekends)
 function calculateClaimDeadline(startDate) {
     let businessDaysToAdd = 2;
@@ -2483,14 +2500,6 @@ module.exports.getAiReportHistory = getAiReportHistory;
 module.exports.markAiReportOrdered = markAiReportOrdered;
 
 // ================= Super Admin (Admin Accounts) =================
-// Use native bcrypt if available; fallback to bcryptjs for portability
-let bcrypt;
-try { bcrypt = require('bcrypt'); } catch (e) {
-    try { bcrypt = require('bcryptjs'); console.warn('Fallback to bcryptjs (native bcrypt not installed).'); } catch (e2) {
-        console.error('No bcrypt implementation available. Install bcrypt or bcryptjs.');
-        bcrypt = { hash: async () => { throw new Error('bcrypt unavailable'); }, compare: async () => false };
-    }
-}
 const SALT_ROUNDS = 10;
 
 async function superUserAuth(req, res, next) {
