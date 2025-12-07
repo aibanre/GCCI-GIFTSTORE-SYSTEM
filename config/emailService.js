@@ -45,7 +45,11 @@ function initializeTransporter() {
       auth: {
         user: emailConfig.user,
         pass: emailConfig.password
-      }
+      },
+      // Add connection timeout settings
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 10000,
+      socketTimeout: 10000
     });
     
     console.log('Email transporter initialized successfully');
@@ -180,11 +184,18 @@ This is an automated message from GCCI Giftstore System
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    // Set timeout for email sending
+    const sendPromise = transporter.sendMail(mailOptions);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Email sending timeout after 15 seconds')), 15000)
+    );
+    
+    const info = await Promise.race([sendPromise, timeoutPromise]);
     console.log('Email sent successfully:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('Failed to send email:', error);
+    console.error('Failed to send email:', error.message);
+    // Don't throw error, just log and return failure
     return { success: false, error: error.message };
   }
 }
@@ -290,11 +301,16 @@ This is an automated message from GCCI Giftstore System
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const sendPromise = transporter.sendMail(mailOptions);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Email sending timeout after 15 seconds')), 15000)
+    );
+    
+    const info = await Promise.race([sendPromise, timeoutPromise]);
     console.log('Cancellation email sent successfully:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('Failed to send cancellation email:', error);
+    console.error('Failed to send cancellation email:', error.message);
     return { success: false, error: error.message };
   }
 }
@@ -433,11 +449,16 @@ This is an automated message from GCCI Giftstore System
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const sendPromise = transporter.sendMail(mailOptions);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Email sending timeout after 15 seconds')), 15000)
+    );
+    
+    const info = await Promise.race([sendPromise, timeoutPromise]);
     console.log('Claim deadline email sent successfully:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('Failed to send claim deadline email:', error);
+    console.error('Failed to send claim deadline email:', error.message);
     return { success: false, error: error.message };
   }
 }
