@@ -70,13 +70,5 @@
     "host": "127.0.0.1",
     "dialect": "mysql",
     "superuserSecret": "12345"
-  },
-  "production": {
-    "username": "root",
-    "password": null,
-    "database": "database_production",
-    "host": "127.0.0.1",
-    "dialect": "mysql",
-    "superuserSecret": "SET_IN_ENV"
   }
 }

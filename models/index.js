@@ -6,6 +6,17 @@ const Sequelize = require('sequelize');
 const process = require('process');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
+
+console.log('=== SEQUELIZE CONFIG DEBUG ===');
+console.log('NODE_ENV:', env);
+console.log('Environment variables present:', {
+  DB_HOST: !!process.env.DB_HOST,
+  DB_PORT: !!process.env.DB_PORT,
+  DB_NAME: !!process.env.DB_NAME,
+  DB_USER: !!process.env.DB_USER,
+  DB_PASSWORD: !!process.env.DB_PASSWORD
+});
+
 let config = require(__dirname + '/../config/config.json')[env];
 
 // Replace environment variable placeholders in config
@@ -33,16 +44,16 @@ if (config.port && typeof config.port === 'string') {
   config.port = parseInt(config.port, 10);
 }
 
-// Debug: Log database connection info in production
-if (env === 'production') {
-  console.log('Database config:', {
-    host: config.host,
-    port: config.port,
-    database: config.database,
-    username: config.username,
-    // Don't log password
-  });
-}
+// Debug: Log database connection info
+console.log('Final database config:', {
+  host: config.host,
+  port: config.port,
+  database: config.database,
+  username: config.username,
+  hasPassword: !!config.password,
+  dialect: config.dialect
+});
+console.log('=== END DEBUG ===');
 
 const db = {};
 
