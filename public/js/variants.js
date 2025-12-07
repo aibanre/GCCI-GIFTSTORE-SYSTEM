@@ -134,7 +134,17 @@ function openEditVariantModal(variantId) {
   document.getElementById('editVariantID').value = variant.VariantID;
   document.getElementById('editVariantSize').value = variant.Size;
   document.getElementById('editVariantPrice').value = variant.Price != null ? variant.Price : '';
-  document.getElementById('editVariantStock').value = variant.StockQuantity;
+  const stockInput = document.getElementById('editVariantStock');
+  // If modal opened from product list, treat stock as an adjustment (like product edit)
+  if (window.__variantModalOpenFromProductList) {
+    stockInput.value = '0';
+    stockInput.placeholder = 'Enter amount to add/remove (e.g. 5 or -3)';
+    modal.dataset.originalStock = variant.StockQuantity;
+  } else {
+    stockInput.value = variant.StockQuantity;
+    stockInput.placeholder = '';
+    delete modal.dataset.originalStock;
+  }
   document.getElementById('editVariantActive').value = variant.IsActive ? '1' : '0';
 }
 
@@ -144,7 +154,12 @@ function initEditVariantModal() {
   const cancelBtn = document.getElementById('cancelEditVariant');
   const form = document.getElementById('editVariantForm');
   if (!modal || !form) return;
-  function close() { modal.style.display = 'none'; }
+  function close() { 
+    modal.style.display = 'none'; 
+    // Clear product-list origin flag and any stored original stock
+    window.__variantModalOpenFromProductList = false;
+    if (modal && modal.dataset) delete modal.dataset.originalStock;
+  }
   if (closeBtn) closeBtn.onclick = close;
   if (cancelBtn) cancelBtn.onclick = close;
   // Close modal when clicking outside
@@ -159,13 +174,41 @@ function initEditVariantModal() {
     const StockQuantity = document.getElementById('editVariantStock').value.trim();
     const IsActive = document.getElementById('editVariantActive').value === '1';
     try {
-      const res = await fetch(`/api/variants/${variantId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ Size, Price, StockQuantity, IsActive })
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || 'Failed to update variant');
+      let res, data;
+      const modalEl = document.getElementById('editVariantModal');
+      const openedFromProductList = !!window.__variantModalOpenFromProductList;
+      if (openedFromProductList) {
+        // Treat StockQuantity as adjustment
+        const adjustment = parseInt(StockQuantity, 10) || 0;
+        const original = parseInt(modalEl.dataset.originalStock || '0', 10);
+        const newStock = original + adjustment;
+        if (newStock < 0) throw new Error('Stock quantity cannot be negative. Current: ' + original + ', Adjustment: ' + adjustment);
+        // Update only stock via PATCH endpoint
+        res = await fetch(`/api/variants/${variantId}/stock`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ StockQuantity: newStock })
+        });
+        data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Failed to update variant stock');
+        // Also update Size/Price/IsActive if provided (optional)
+        const shouldUpdateMeta = (Size !== '' || Price !== '' || IsActive !== undefined);
+        if (shouldUpdateMeta) {
+          await fetch(`/api/variants/${variantId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ Size, Price, IsActive })
+          });
+        }
+      } else {
+        res = await fetch(`/api/variants/${variantId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ Size, Price, StockQuantity, IsActive })
+        });
+        data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Failed to update variant');
+      }
       // Update local store
       const item = variantItems.find(i => i.ItemID === selectedVariantItemId);
       if (item) {

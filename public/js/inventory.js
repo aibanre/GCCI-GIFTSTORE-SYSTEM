@@ -186,10 +186,20 @@ async function fetchProducts() {
     });
     // Inline variant edit/delete actions
     document.querySelectorAll('.variant-inline-edit-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const itemId = parseInt(btn.getAttribute('data-item-id'), 10);
         const variantId = parseInt(btn.getAttribute('data-variant-id'), 10);
+        // Ensure variants data is loaded before selecting item
+        if (typeof fetchItemsWithVariants === 'function') {
+          try {
+            await fetchItemsWithVariants();
+          } catch (err) {
+            console.warn('Could not preload variants before opening modal:', err);
+          }
+        }
         if (typeof selectVariantItem === 'function') selectVariantItem(itemId);
+        // Mark that modal was opened from the product list so stock behaves like an adjustment
+        window.__variantModalOpenFromProductList = true;
         if (typeof openEditVariantModal === 'function') openEditVariantModal(variantId);
       });
     });
