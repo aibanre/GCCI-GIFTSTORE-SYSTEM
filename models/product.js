@@ -27,6 +27,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 0,
       },
+      IsActive: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
       CategoryID: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -41,6 +46,17 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: false,
     }
   );
+
+  Product.associate = function(models) {
+    Product.belongsTo(models.Category, {
+      foreignKey: 'CategoryID',
+      as: 'Category'
+    });
+    Product.hasMany(models.Item_Variant, {
+      foreignKey: 'ItemID',
+      as: 'Variants'
+    });
+  };
 
   return Product;
 };

@@ -13,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
+      VariantID: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       QuantityChange: {
         type: DataTypes.INTEGER,
         allowNull: false,

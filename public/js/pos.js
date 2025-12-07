@@ -1,4 +1,4 @@
-// Point of Sale (POS) System Logic
+// Point of Sale (POS) System Logic (Variant-aware)
 
 let cartItems = [];
 let allPOSProducts = [];
@@ -7,11 +7,9 @@ function filterAndRenderPOSProducts() {
   const categoryFilter = document.getElementById('posCategoryFilter');
   const searchInput = document.getElementById('posProductSearch');
   let filtered = allPOSProducts;
-  // Filter by category
   if (categoryFilter && categoryFilter.value) {
     filtered = filtered.filter(p => String(p.categoryID) === String(categoryFilter.value));
   }
-  // Filter by search
   if (searchInput && searchInput.value.trim() !== '') {
     const term = searchInput.value.trim().toLowerCase();
     filtered = filtered.filter(p => p.name.toLowerCase().includes(term));
@@ -23,16 +21,11 @@ async function initPOS() {
   await fetchPOSCategories();
   await fetchPOSProducts();
   setupPOSEventListeners();
-
-  // Add event listeners for category filter and search bar
   const categoryFilter = document.getElementById('posCategoryFilter');
-  if (categoryFilter) {
-    categoryFilter.addEventListener('change', filterAndRenderPOSProducts);
-  }
+  if (categoryFilter) categoryFilter.addEventListener('change', filterAndRenderPOSProducts);
   const searchInput = document.getElementById('posProductSearch');
-  if (searchInput) {
-    searchInput.addEventListener('input', filterAndRenderPOSProducts);
-  }
+  if (searchInput) searchInput.addEventListener('input', filterAndRenderPOSProducts);
+}
 
 // Fetch categories from API and populate POS category dropdown
 async function fetchPOSCategories() {
@@ -60,32 +53,51 @@ async function fetchPOSCategories() {
     }
   }
 }
-}
 
 async function fetchPOSProducts() {
   try {
-    const response = await fetch('/api/products');
+    const response = await fetch('/api/items-with-variants');
     if (!response.ok) throw new Error('Failed to fetch products');
     const raw = await response.json();
-    // Normalize server product shape to what POS expects
-    const products = Array.isArray(raw)
-      ? raw.map((p) => ({
-          id: p.ItemID ?? p.id ?? p.ItemID,
-          name: p.ItemName ?? p.name ?? '',
-          price: Number(p.Price ?? p.price ?? 0) || 0,
-          stock: Number(p.StockQuantity ?? p.stock ?? 0) || 0,
-          categoryID: p.CategoryID ?? '',
-        }))
-      : [];
-
-    allPOSProducts = products;
+    const items = Array.isArray(raw) ? raw : [];
+    const flattened = [];
+    items.forEach(item => {
+      const base = {
+        id: item.ItemID,
+        itemId: item.ItemID,
+        variantId: null,
+        name: item.ItemName,
+        price: Number(item.Price || 0) || 0,
+        stock: Number(item.StockQuantity || 0) || 0,
+        categoryID: item.CategoryID ?? '',
+        isVariant: false
+      };
+      const variants = Array.isArray(item.Variants) ? item.Variants : [];
+      if (variants.length === 0) {
+        flattened.push(base);
+      } else {
+        variants.forEach(v => {
+          flattened.push({
+            id: `${item.ItemID}-V${v.VariantID}`,
+            itemId: item.ItemID,
+            variantId: v.VariantID,
+            name: `${item.ItemName} (${v.Size})`,
+            price: v.Price != null ? Number(v.Price) : base.price,
+            stock: Number(v.StockQuantity || 0) || 0,
+            categoryID: item.CategoryID ?? '',
+            isVariant: true,
+            size: v.Size
+          });
+        });
+      }
+    });
+    allPOSProducts = flattened;
     filterAndRenderPOSProducts();
   } catch (error) {
     console.error('Error fetching POS products:', error);
-    // Fallback to sample data
     renderPOSProducts([
       { id: '1', name: 'Sample Product', price: 999.99, stock: 15 },
-      { id: '2', name: 'Book Set', price: 599.99, stock: 20 },
+      { id: '2', name: 'Book Set (M)', price: 599.99, stock: 20 },
       { id: '3', name: 'Uniform (S)', price: 1299.99, stock: 8 },
     ]);
   }
@@ -142,31 +154,78 @@ function setupPOSEventListeners() {
   if (closeBtn) {
     closeBtn.addEventListener('click', closeReceipt);
   }
+  
+  // Modal close button
+  const closeModalBtn = document.getElementById('closePurchaseSlip');
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+      const modal = document.getElementById('purchaseSlipModal');
+      if (modal) modal.style.display = 'none';
+    });
+  }
+  
+  // New transaction button
+  const newTransactionBtn = document.getElementById('posNewTransaction');
+  if (newTransactionBtn) {
+    newTransactionBtn.addEventListener('click', closeReceipt);
+  }
+  
+  // Close modal when clicking outside
+  const modal = document.getElementById('purchaseSlipModal');
+  if (modal) {
+    window.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  }
 }
 
 function addToCart(productId, productName, productPrice) {
-  const existingItem = cartItems.find((item) => item.id === productId);
+  const product = allPOSProducts.find(p => p.id == productId);
+  if (!product) { alert('Product not found'); return; }
+  const existingItem = cartItems.find(ci => ci.displayId === productId);
+  const currentQty = existingItem ? existingItem.quantity : 0;
+  if (currentQty + 1 > product.stock) {
+    alert(`Cannot add more than ${product.stock} items. Only ${product.stock - currentQty} more available.`);
+    return;
+  }
   if (existingItem) {
     existingItem.quantity++;
   } else {
     cartItems.push({
-      id: productId,
+      id: product.itemId, // base ItemID for backend
+      variantId: product.variantId, // optional
+      displayId: product.id, // unique per variant/base
       name: productName,
       price: productPrice,
+      stock: product.stock,
       quantity: 1,
+      isVariant: product.isVariant,
+      size: product.size || null
     });
   }
   updateCart();
 }
 
 function removeFromCart(productId) {
-  cartItems = cartItems.filter((item) => item.id !== productId);
+  cartItems = cartItems.filter(ci => ci.displayId !== productId && ci.id !== productId);
   updateCart();
 }
 
 function updateQuantity(productId, newQuantity) {
-  const item = cartItems.find((item) => item.id === productId);
-  if (item) {
+  const item = cartItems.find(ci => ci.displayId === productId || ci.id === productId);
+  const product = allPOSProducts.find(p => p.id == productId || p.id == (item ? item.displayId : null));
+  if (item && product) {
+    const qty = Math.max(1, parseInt(newQuantity) || 1);
+    if (qty > product.stock) {
+      alert(`Cannot set quantity to ${qty}. Maximum available stock is ${product.stock}.`);
+      item.quantity = product.stock;
+    } else {
+      item.quantity = qty;
+    }
+    updateCart();
+  } else if (item) {
     item.quantity = Math.max(1, parseInt(newQuantity) || 1);
     updateCart();
   }
@@ -188,11 +247,11 @@ function updateCart() {
           <span class="cart-item-price">₱${item.price.toFixed(2)}</span>
         </div>
         <div class="cart-item-controls">
-          <button class="qty-btn" onclick="updateQuantity('${item.id}', ${item.quantity - 1})">-</button>
-          <input type="number" value="${item.quantity}" onchange="updateQuantity('${item.id}', this.value)" class="qty-input">
-          <button class="qty-btn" onclick="updateQuantity('${item.id}', ${item.quantity + 1})">+</button>
+          <button class="qty-btn" onclick="updateQuantity('${item.displayId}', ${item.quantity - 1})">-</button>
+          <input type="number" value="${item.quantity}" onchange="updateQuantity('${item.displayId}', this.value)" class="qty-input">
+          <button class="qty-btn" onclick="updateQuantity('${item.displayId}', ${item.quantity + 1})">+</button>
           <span class="item-total">₱${(item.price * item.quantity).toFixed(2)}</span>
-          <button class="btn btn-danger btn-sm" onclick="removeFromCart('${item.id}')"><i class="fas fa-trash"></i></button>
+          <button class="btn btn-danger btn-sm" onclick="removeFromCart('${item.displayId}')"><i class="fas fa-trash"></i></button>
         </div>
       </div>
     `
@@ -217,76 +276,114 @@ function completePurchase() {
     return;
   }
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  const receiptContent = document.getElementById('receiptContent');
-  if (!receiptContent) return;
-
-  const receiptHTML = `
-    <div class="receipt-details">
-      <p><strong>GCCI GIFTSTORE - PURCHASE SLIP</strong></p>
-      <p>Slip #${Date.now()}</p>
-      <p>Date/Time: ${new Date().toLocaleString()}</p>
-      <hr>
-      <table class="receipt-table">
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Qty</th>
-            <th>Price</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${cartItems.map((item) => `
-            <tr>
-              <td>${escapeHtml(item.name)}</td>
-              <td>${item.quantity}</td>
-              <td>₱${item.price.toFixed(2)}</td>
-              <td>₱${(item.price * item.quantity).toFixed(2)}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-      <hr>
-      <div class="receipt-summary">
-        <p><strong>TOTAL: ₱${subtotal.toFixed(2)}</strong></p>
-      </div>
-      <hr>
-      <p style="text-align: center; font-size: 0.9em;">Customer pays at cashier</p>
-      <p style="text-align: center; font-size: 0.9em;">Thank you for your purchase!</p>
-    </div>
-  `;
-
-  receiptContent.innerHTML = receiptHTML;
-  const receipt = document.getElementById('posReceipt');
-  if (receipt) receipt.classList.remove('hidden');
-
-  alert('Purchase slip generated successfully!');
+  // Send purchase to backend
+  fetch('/api/purchase/complete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cartItems, purchaseType: 'Onsite' })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) throw new Error(data.error || 'Failed to complete purchase');
+      // Show receipt modal on success
+      const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const receiptContent = document.getElementById('receiptContent');
+      if (!receiptContent) return;
+      const receiptHTML = `
+        <div class="receipt-details" style="text-align: center; font-family: monospace;">
+          <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px dashed #ddd;">
+            <h4 style="margin: 0 0 0.5rem 0; color: #2a6b52; font-size: 1.25rem;">GCCI GIFTSTORE</h4>
+            <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">Gingoog City Colleges, Inc.</p>
+            <p style="margin: 0.25rem 0 0 0; color: #7f8c8d; font-size: 0.85rem;">PURCHASE SLIP</p>
+          </div>
+          <div style="margin-bottom: 1rem; text-align: left; font-size: 0.9rem;">
+            <p style="margin: 0.25rem 0;"><strong>Slip #:</strong> ${data.purchase.PurchaseID}</p>
+            <p style="margin: 0.25rem 0;"><strong>Date/Time:</strong> ${new Date().toLocaleString()}</p>
+          </div>
+          <div style="border: 2px dashed #ddd; border-left: none; border-right: none; padding: 1rem 0; margin: 1rem 0;">
+            <table style="width: 100%; font-size: 0.9rem; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid #ddd;">
+                  <th style="padding: 0.5rem 0;">Item</th>
+                  <th style="padding: 0.5rem 0; text-align: center;">Qty</th>
+                  <th style="padding: 0.5rem 0; text-align: right;">Price</th>
+                  <th style="padding: 0.5rem 0; text-align: right;">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${cartItems.map((item) => `
+                  <tr>
+                    <td style="padding: 0.5rem 0;">${escapeHtml(item.name)}</td>
+                    <td style="padding: 0.5rem 0; text-align: center;">${item.quantity}</td>
+                    <td style="padding: 0.5rem 0; text-align: right;">₱${item.price.toFixed(2)}</td>
+                    <td style="padding: 0.5rem 0; text-align: right; font-weight: 600;">₱${(item.price * item.quantity).toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div style="margin: 1.5rem 0; padding: 1rem; background: linear-gradient(135deg, #f8f9fa 0%, #e8ecef 100%); border-radius: 8px;">
+            <p style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #27ae60;">TOTAL: ₱${subtotal.toFixed(2)}</p>
+          </div>
+          <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 2px dashed #ddd; color: #7f8c8d; font-size: 0.85rem;">
+            <p style="margin: 0.25rem 0;">Customer pays at cashier</p>
+            <p style="margin: 0.5rem 0 0 0; font-weight: 600; color: #2a6b52;">Thank you for your purchase!</p>
+          </div>
+        </div>
+      `;
+      receiptContent.innerHTML = receiptHTML;
+      const modal = document.getElementById('purchaseSlipModal');
+      if (modal) modal.style.display = 'block';
+      // NO AUTOMATIC REFRESH - User can manually refresh when needed
+    })
+    .catch(err => {
+      alert('Error: ' + (err.message || 'Failed to complete purchase'));
+    });
 }
 
 function clearCart() {
   if (confirm('Are you sure you want to clear the cart?')) {
     cartItems = [];
     updateCart();
-    const receipt = document.getElementById('posReceipt');
-    if (receipt) receipt.classList.add('hidden');
   }
 }
 
 function closeReceipt() {
   cartItems = [];
   updateCart();
-  const receipt = document.getElementById('posReceipt');
-  if (receipt) receipt.classList.add('hidden');
+  const modal = document.getElementById('purchaseSlipModal');
+  if (modal) modal.style.display = 'none';
+}
+
+// Refresh POS System Function
+async function refreshPOSSystem() {
+  console.log('Refreshing POS System...');
+  
+  // Clear cart and close modal
+  cartItems = [];
+  updateCart();
+  
+  const modal = document.getElementById('purchaseSlipModal');
+  if (modal) modal.style.display = 'none';
+  
+  // Re-fetch products to get updated stock levels
+  await fetchPOSProducts();
+  
+  // Reset filters
+  const categoryFilter = document.getElementById('posCategoryFilter');
+  const searchInput = document.getElementById('posProductSearch');
+  if (categoryFilter) categoryFilter.value = '';
+  if (searchInput) searchInput.value = '';
+  
+  console.log('POS System refreshed successfully');
 }
 
 function escapeHtml(text) {
   const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
+    '&': '&',
+    '<': '<',
+    '>': '>',
+    '"': '"',
     "'": '&#039;',
   };
   // Ensure we operate on a string to avoid errors when fields are undefined/null

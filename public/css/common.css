@@ -34,12 +34,14 @@ body {
 
 /* Buttons */
 .btn {
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1rem;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 0.9rem;
-    transition: background 0.3s, transform 0.2s;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    outline: none;
 }
 
 .btn:hover {
@@ -47,12 +49,21 @@ body {
 }
 
 .btn-primary {
-    background: #3498db;
+    background: linear-gradient(135deg, #2a6b52 0%, #1e4d3a 100%);
     color: white;
+    box-shadow: 0 2px 8px rgba(42, 107, 82, 0.3);
+    transition: all 0.3s ease;
 }
 
 .btn-primary:hover {
-    background: #2980b9;
+    background: linear-gradient(135deg, #1e4d3a 0%, #2a6b52 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(42, 107, 82, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(42, 107, 82, 0.3);
 }
 
 .btn-success {
@@ -190,6 +201,12 @@ body {
     background: #fab1a0;
     color: #d63031;
 }
+
+/* Inventory / Purchase Indicators */
+.qty-neg { color:#dc3545; font-weight:600; }
+.qty-pos { color:#28a745; font-weight:600; }
+.stock-low-critical { color:#dc3545; font-weight:600; }
+.stock-low { color:#d39e00; font-weight:600; }
 
 /* Containers */
 .form-container {

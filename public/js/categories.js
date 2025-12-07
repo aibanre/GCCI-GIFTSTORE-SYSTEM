@@ -133,12 +133,11 @@ function renderCategories() {
     .map((cat) => {
       const id = cat.CategoryID || cat.id;
       const name = cat.CategoryName || cat.name || '';
-      const desc = cat.description || '';
       const itemsCount = cat.itemsCount || 0;
       return `
       <tr>
         <td>${escapeHtml(name)}</td>
-        <td>${escapeHtml(desc)}</td>
+        <td>${id}</td>
         <td>${itemsCount}</td>
         <td>
           <button class="btn btn-warning btn-sm" onclick="editCategory(${id})"><i class="fas fa-edit"></i> Edit</button>

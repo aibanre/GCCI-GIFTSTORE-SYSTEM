@@ -8,8 +8,1311 @@
     <link rel="stylesheet" href="/css/home.css">
     <link rel="stylesheet" href="/css/catalog.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Enhanced header styling */
+        .headerContainer {
+            background: linear-gradient(135deg, #2a6b52 0%, #1e4d3a 100%) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+            border-bottom: 3px solid #469729 !important;
+        }
+        .textHolder h1 {
+            color: white !important;
+            font-weight: 700 !important;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2) !important;
+        }
+        .searchContainer {
+            background: rgba(255,255,255,0.95) !important;
+            border-radius: 25px !important;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1) !important;
+            border: none !important;
+        }
+        .searchInput {
+            background: transparent !important;
+            border: none !important;
+        }
+        .searchButton {
+            background: transparent !important;
+            color: #469729 !important;
+            border-radius: 0 !important;
+            width: 40px !important;
+            height: 40px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            border: none !important;
+        }
+        /* Modal overlay + centered card for product details */
+        .modal-centered {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            padding: 1rem;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content-custom {
+            background: #fff;
+            padding: 0;
+            border-radius: 16px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-height: 90vh;
+            overflow: hidden;
+            animation: modalSlideIn 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .modal-content-custom .modal-header {
+            background: linear-gradient(135deg, #2a6b52 0%, #1e4d3a 100%);
+            padding: 1.25rem 1.5rem;
+            color: white;
+            position: relative;
+            border-bottom: 3px solid #469729;
+        }
+        .modal-content-custom .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+            max-height: calc(90vh - 120px);
+        }
+        .modal-content-custom .close-modal {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: white;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .modal-content-custom .close-modal:hover {
+            background: #469729;
+            transform: rotate(90deg);
+        }
+        .product-detail-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        .product-detail-image {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .product-detail-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .product-detail-info h3 {
+            font-size: 1.5rem;
+            color: #333;
+            margin: 0;
+            font-weight: 700;
+        }
+        .product-detail-price {
+            font-size: 1.8rem;
+            color: #469729;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+        .product-detail-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .product-detail-meta p {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .product-detail-meta strong {
+            min-width: 100px;
+            color: #2a6b52;
+        }
+        .product-description {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #469729;
+        }
+        .product-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid #e9ecef;
+        }
+        .qty-input {
+            width: 80px;
+            padding: 0.6rem;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1rem;
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .product-detail-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+        .modal-variant-wrapper { 
+            margin-top: 0.5rem;
+        }
+        .modal-variant-wrapper select {
+            width: 100%;
+            padding: 0.6rem;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+        @media (max-width: 600px) {
+            .modal-content-custom { 
+                max-width: 98%; 
+                border-radius: 10px;
+            }
+            
+            .modal-content-custom .modal-body { 
+                padding: 1rem; 
+            }
+            
+            .modal-content-custom .modal-header {
+                padding: 0.75rem 1rem;
+                border-radius: 10px 10px 0 0;
+            }
+            
+            .modal-content-custom .modal-header h3 {
+                font-size: 1.1rem;
+            }
+            
+            .modal-content-custom .close-modal {
+                width: 30px;
+                height: 30px;
+                font-size: 1.2rem;
+            }
+            
+            .product-detail-image {
+                max-height: 200px;
+                border-radius: 8px;
+            }
+            
+            .product-detail-info h3 {
+                font-size: 1.1rem;
+            }
+            
+            .product-detail-info p,
+            .product-detail-info .invalid-feedback {
+                font-size: 0.85rem;
+            }
+            
+            .modal-variant-wrapper select {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .quantity-field-wrapper input {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+            
+            /* Header Ultra Mobile */
+            .headerContainer {
+                padding: 0.6rem 0.75rem !important;
+            }
+            
+            .logoHolder img {
+                max-height: 40px !important;
+            }
+            
+            .textHolder h1 {
+                font-size: 0.9rem !important;
+            }
+            
+            .searchInput {
+                font-size: 0.85rem !important;
+                padding: 0.45rem 0.65rem !important;
+            }
+            
+            .searchButton {
+                width: 32px !important;
+                height: 32px !important;
+            }
+            
+            .searchButton i {
+                font-size: 0.9rem !important;
+            }
+            
+            .cartContainer {
+                width: 40px !important;
+                height: 40px !important;
+            }
+            
+            .cartContainer i {
+                font-size: 1rem !important;
+            }
+            
+            /* Cart Sidebar Ultra Mobile */
+            #reservationCartSidebar .cart-header {
+                padding: 0.75rem 1rem;
+            }
+            
+            #reservationCartSidebar .cart-header h3 {
+                font-size: 1.1rem;
+            }
+            
+            .close-cart-btn {
+                font-size: 1.3rem;
+                width: 32px;
+                height: 32px;
+            }
+            
+            #reservationCartSidebar .cart-body {
+                padding: 0.75rem;
+            }
+            
+            .cart-item {
+                grid-template-columns: 60px 1fr;
+                gap: 0.6rem;
+                padding: 0.5rem;
+            }
+            
+            .cart-item-image {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .cart-item-name {
+                font-size: 0.85rem;
+            }
+            
+            .cart-item-variant {
+                font-size: 0.75rem;
+            }
+            
+            .cart-item-price {
+                font-size: 0.9rem;
+            }
+            
+            .cart-item-actions {
+                grid-column: 1 / -1;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 0.4rem;
+                padding-top: 0.4rem;
+            }
+            
+            .cart-qty-control {
+                gap: 0.4rem;
+                padding: 0.15rem;
+            }
+            
+            .cart-qty-btn {
+                width: 24px;
+                height: 24px;
+                font-size: 0.8rem;
+            }
+            
+            .cart-qty-display {
+                min-width: 25px;
+                font-size: 0.85rem;
+            }
+            
+            .cart-remove-btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+            }
+            
+            .cart-summary {
+                padding: 0.75rem;
+            }
+            
+            .cart-summary-row {
+                margin-bottom: 0.5rem;
+            }
+            
+            .cart-summary-label,
+            .cart-summary-value {
+                font-size: 0.85rem;
+            }
+            
+            .cart-total {
+                padding: 0.6rem;
+            }
+            
+            .cart-total-label {
+                font-size: 1rem;
+            }
+            
+            .cart-total-value {
+                font-size: 1.1rem;
+            }
+            
+            .cart-actions button {
+                padding: 0.55rem 1rem !important;
+                font-size: 0.85rem !important;
+            }
+            
+            /* Variant Chips Ultra Mobile */
+            .variant-chips {
+                gap: 0.35rem;
+                padding: 0 0.75rem;
+            }
+            
+            .variant-chip {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.7rem;
+            }
+            
+            .variant-chip .chip-stock {
+                font-size: 0.65rem;
+                margin-left: 0.25rem;
+            }
+            
+            /* Form Elements Ultra Mobile */
+            .form-group {
+                margin-bottom: 1rem;
+            }
+            
+            .form-group label {
+                font-size: 0.85rem;
+                margin-bottom: 0.4rem;
+            }
+            
+            .form-control {
+                padding: 0.5rem 0.65rem;
+                font-size: 0.85rem;
+            }
+            
+            .btn-primary, .btn-secondary {
+                padding: 0.55rem 1rem !important;
+                font-size: 0.85rem !important;
+                border-radius: 8px !important;
+            }
+            
+            /* Cart Empty State Mobile */
+            .cart-empty {
+                padding: 2rem 0.75rem;
+            }
+            
+            .cart-empty i {
+                font-size: 2.5rem;
+            }
+            
+            .cart-empty p {
+                font-size: 0.9rem;
+            }
+        }
+        /* Variant selector displayed on product cards as chips */
+        .variant-wrapper { display: block; margin-top: 0.4rem; margin-bottom: 0.4rem; }
+        .variant-chips { display:flex; gap:0.4rem; flex-wrap:wrap; padding: 0 1rem; }
+        .variant-chip { 
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid #dee2e6;
+            padding: 0.35rem 0.7rem;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .variant-chip:hover {
+            border-color: #469729;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+        }
+        .variant-chip .chip-stock { 
+            font-weight: 700;
+            margin-left: 0.3rem;
+            color: #469729;
+            font-size: 0.75rem;
+        }
+        .variant-chip.selected { 
+            background: linear-gradient(135deg, #469729 0%, #2a6b52 100%);
+            color: white;
+            border-color: #469729;
+            box-shadow: 0 4px 12px rgba(42, 107, 82, 0.3);
+        }
+        .variant-chip.selected .chip-stock {
+            color: white;
+        }
+        .invalid-feedback { 
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+            display: block;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #469729 0%, #2a6b52 100%) !important;
+            border: none !important;
+            padding: 0.75rem 1.5rem !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 12px rgba(42, 107, 82, 0.3) !important;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 16px rgba(42, 107, 82, 0.5) !important;
+        }
+        .btn-secondary {
+            background: #6c757d !important;
+            border: none !important;
+            padding: 0.75rem 1.5rem !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+        }
+        .btn-secondary:hover {
+            background: #5a6268 !important;
+            transform: translateY(-2px) !important;
+        }
+        /* Reservation Cart Sidebar */
+        #reservationCartSidebar {
+            position: fixed;
+            top: 0;
+            right: -420px;
+            width: 420px;
+            height: 100vh;
+            background: white;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1500;
+            display: flex;
+            flex-direction: column;
+        }
+        #reservationCartSidebar.open {
+            right: 0;
+        }
+        .cart-sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1400;
+        }
+        .cart-sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        #reservationCartSidebar .cart-header {
+            background: linear-gradient(135deg, #2a6b52 0%, #1e4d3a 100%);
+            padding: 1.25rem 1.5rem; color: white; border-bottom: 3px solid #469729;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-shrink: 0;
+        }
+        #reservationCartSidebar .cart-header h3 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+        #reservationCartSidebar .cart-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
+        .cart-empty { text-align: center; padding: 3rem 1rem; color: #6c757d; }
+        .cart-empty i { font-size: 3rem; color: #dee2e6; margin-bottom: 1rem; }
+        .cart-empty p { font-size: 1rem; margin: 0; }
+        .cart-item {
+            display: grid; grid-template-columns: 70px 1fr; gap: 0.75rem;
+            padding: 0.75rem; background: #f8f9fa; border-radius: 10px;
+            margin-bottom: 0.75rem; transition: all 0.3s ease; border: 2px solid transparent;
+        }
+        .cart-item:hover { border-color: #469729; box-shadow: 0 4px 12px rgba(42, 107, 82, 0.15); }
+        .cart-item-image {
+            width: 70px; height: 70px; object-fit: cover;
+            border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .cart-item-details { display: flex; flex-direction: column; justify-content: center; gap: 0.25rem; }
+        .cart-item-name { font-weight: 700; font-size: 0.95rem; color: #2a6b52; margin: 0; }
+        .cart-item-variant { font-size: 0.8rem; color: #6c757d; margin: 0; }
+        .cart-item-price { font-size: 1rem; color: #469729; font-weight: 600; margin: 0; }
+        .cart-item-actions {
+            grid-column: 1 / -1;
+            display: flex; justify-content: space-between;
+            align-items: center; gap: 0.5rem;
+            margin-top: 0.5rem; padding-top: 0.5rem;
+            border-top: 1px solid #dee2e6;
+        }
+        .cart-qty-control {
+            display: flex; align-items: center; gap: 0.5rem;
+            background: white; border-radius: 8px; padding: 0.2rem; border: 2px solid #dee2e6;
+        }
+        .cart-qty-btn {
+            background: #469729; color: white; border: none;
+            width: 26px; height: 26px; border-radius: 6px; cursor: pointer;
+            font-size: 0.9rem; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .cart-qty-btn:hover { background: #2a6b52; transform: scale(1.1); }
+        .cart-qty-display { min-width: 30px; text-align: center; font-weight: 600; color: #2a6b52; font-size: 0.9rem; }
+        .cart-remove-btn {
+            background: transparent; color: #dc3545; border: 1px solid #dc3545;
+            padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer;
+            font-size: 0.8rem; transition: all 0.3s ease; font-weight: 500;
+        }
+        .cart-remove-btn:hover { background: #dc3545; color: white; }
+        .cart-summary { margin-top: auto; padding: 1rem 1.5rem; border-top: 3px solid #e9ecef; background: #f8f9fa; flex-shrink: 0; }
+        .cart-summary-row {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;
+        }
+        .cart-summary-label { font-size: 0.95rem; color: #495057; font-weight: 500; }
+        .cart-summary-value { font-size: 0.95rem; color: #212529; font-weight: 600; }
+        .cart-total {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.75rem; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-radius: 8px; margin-top: 0.75rem;
+        }
+        .cart-total-label { font-size: 1.1rem; color: #2a6b52; font-weight: 700; }
+        .cart-total-value { font-size: 1.3rem; color: #469729; font-weight: 800; }
+        .cart-actions { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
+        .cart-actions button { width: 100%; padding: 0.65rem 1rem !important; font-size: 0.9rem !important; }
+        .close-cart-btn {
+            background: transparent; border: none; color: white;
+            font-size: 1.5rem; cursor: pointer; width: 35px; height: 35px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; transition: all 0.3s ease;
+        }
+        .close-cart-btn:hover { background: rgba(255,255,255,0.2); transform: rotate(90deg); }
+        @media (max-width: 768px) {
+            #reservationCartSidebar { 
+                width: 100%; 
+                right: -100%; 
+            }
+            
+            /* Header Mobile Optimization */
+            .headerContainer {
+                flex-wrap: wrap;
+                padding: 0.75rem 1rem !important;
+                gap: 0.75rem !important;
+            }
+            
+            .brandContainer {
+                flex: 1 1 auto;
+                min-width: 150px;
+            }
+            
+            .logoHolder img {
+                max-height: 45px !important;
+            }
+            
+            .textHolder h1 {
+                font-size: 1rem !important;
+            }
+            
+            .searchContainer {
+                flex: 1 1 100%;
+                order: 3;
+                width: 100%;
+            }
+            
+            .searchInput {
+                font-size: 0.9rem !important;
+                padding: 0.5rem 0.75rem !important;
+            }
+            
+            .searchButton {
+                width: 35px !important;
+                height: 35px !important;
+            }
+            
+            .cartContainer {
+                width: 45px !important;
+                height: 45px !important;
+                flex-shrink: 0;
+            }
+            
+            .cartContainer i {
+                font-size: 1.1rem !important;
+            }
+            
+            /* Modal Mobile */
+            .modal-content-custom {
+                width: 96%;
+                max-height: 92vh;
+            }
+            
+            .modal-content-custom .modal-header {
+                padding: 1rem 1.25rem;
+            }
+            
+            .modal-content-custom .modal-header h3 {
+                font-size: 1.2rem;
+            }
+            
+            .modal-content-custom .close-modal {
+                width: 32px;
+                height: 32px;
+                font-size: 1.3rem;
+                right: 0.75rem;
+                top: 0.75rem;
+            }
+            
+            .modal-content-custom .modal-body {
+                padding: 1.25rem;
+            }
+            
+            .product-detail-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .product-detail-image {
+                max-height: 250px;
+                object-fit: contain;
+            }
+            
+            .product-detail-info h3 {
+                font-size: 1.2rem;
+            }
+            
+            /* Cart Sidebar Mobile */
+            #reservationCartSidebar .cart-header {
+                padding: 1rem 1.25rem;
+            }
+            
+            #reservationCartSidebar .cart-header h3 {
+                font-size: 1.2rem;
+            }
+            
+            #reservationCartSidebar .cart-body {
+                padding: 1rem;
+            }
+            
+            .cart-item {
+                padding: 0.6rem;
+                margin-bottom: 0.6rem;
+            }
+            
+            .cart-item-name {
+                font-size: 0.9rem;
+            }
+            
+            .cart-summary {
+                padding: 0.75rem 1rem;
+            }
+            
+            .cart-total-label {
+                font-size: 1rem;
+            }
+            
+            .cart-total-value {
+                font-size: 1.15rem;
+            }
+            
+            /* Variant Chips Mobile */
+            .variant-chip {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.75rem;
+            }
+            
+            .variant-chip .chip-stock {
+                font-size: 0.7rem;
+            }
+            
+            /* Form Elements Mobile */
+            .form-group label {
+                font-size: 0.9rem;
+            }
+            
+            .form-control {
+                padding: 0.6rem 0.75rem;
+                font-size: 0.9rem;
+            }
+            
+            .btn-primary, .btn-secondary {
+                padding: 0.6rem 1.25rem !important;
+                font-size: 0.9rem !important;
+            }
+            
+            /* Mobile Filter Dropdown */
+            .filter-toggle-btn {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+                padding: 1rem;
+                background: linear-gradient(135deg, #2a6b52 0%, #1e4d3a 100%);
+                color: white;
+                border: none;
+                border-radius: 12px;
+                font-size: 1rem;
+                font-weight: 600;
+                cursor: pointer;
+                margin-bottom: 1rem;
+                box-shadow: 0 4px 12px rgba(42, 107, 82, 0.3);
+                transition: all 0.3s ease;
+            }
+            
+            .filter-toggle-btn:active {
+                transform: scale(0.98);
+            }
+            
+            .filter-toggle-btn i {
+                transition: transform 0.3s ease;
+            }
+            
+            .filter-toggle-btn.active i {
+                transform: rotate(180deg);
+            }
+            
+            .sidebar {
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .sidebar .filter-content {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.4s ease;
+            }
+            
+            .sidebar .filter-content.open {
+                max-height: 2000px;
+            }
+        }
+        /* Reservation Confirmation Modal */
+        #reservationConfirmModal .modal-content-custom {
+            max-width: 550px;
+            padding: 0;
+        }
+        #reservationConfirmModal .modal-header {
+            background: linear-gradient(135deg, #2a6b52 0%, #1e4d3a 100%);
+            padding: 1.25rem 1.5rem;
+            color: white;
+            border-bottom: 3px solid #469729;
+            border-radius: 16px 16px 0 0;
+            position: relative;
+        }
+        #reservationConfirmModal .modal-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        #reservationConfirmModal .modal-body {
+            padding: 2rem 1.5rem 1.5rem 1.5rem;
+        }
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #2a6b52;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+        .form-group label i {
+            margin-right: 0.5rem;
+            color: #469729;
+            width: 16px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+            box-sizing: border-box;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #469729;
+            box-shadow: 0 0 0 3px rgba(70, 151, 41, 0.1);
+        }
+        .form-control::placeholder {
+            color: #adb5bd;
+        }
+        .form-control.error {
+            border-color: #dc3545;
+        }
+        .reservation-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #e9ecef;
+        }
+        .reservation-actions button {
+            flex: 1;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #469729 0%, #2a6b52 100%) !important;
+            border: none !important;
+            padding: 0.75rem 1.5rem !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 12px rgba(42, 107, 82, 0.3) !important;
+            color: white !important;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 16px rgba(42, 107, 82, 0.5) !important;
+        }
+        .reservation-info {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #469729;
+        }
+        .reservation-info p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #2a6b52;
+            line-height: 1.6;
+        }
+        .reservation-info i {
+            color: #469729;
+            margin-right: 0.5rem;
+        }
+
+        .cart-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+        }
+        .cart-empty i {
+            font-size: 4rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
+        }
+        .cart-empty p {
+            font-size: 1.1rem;
+            margin: 0;
+        }
+        .cart-item {
+            display: grid;
+            grid-template-columns: 80px 1fr auto;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .cart-item:hover {
+            border-color: #469729;
+            box-shadow: 0 4px 12px rgba(42, 107, 82, 0.15);
+        }
+        .cart-item-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .cart-item-details {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+        .cart-item-name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #2a6b52;
+            margin: 0;
+        }
+        .cart-item-variant {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin: 0;
+        }
+        .cart-item-price {
+            font-size: 1.1rem;
+            color: #469729;
+            font-weight: 600;
+            margin: 0;
+        }
+        .cart-item-actions {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 0.5rem;
+        }
+        .cart-qty-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: white;
+            border-radius: 8px;
+            padding: 0.25rem;
+            border: 2px solid #dee2e6;
+        }
+        .cart-qty-btn {
+            background: #469729;
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .cart-qty-btn:hover {
+            background: #2a6b52;
+            transform: scale(1.1);
+        }
+        .cart-qty-display {
+            min-width: 35px;
+            text-align: center;
+            font-weight: 600;
+            color: #2a6b52;
+        }
+        .cart-remove-btn {
+            background: transparent;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .cart-remove-btn:hover {
+            background: #dc3545;
+            color: white;
+        }
+        .cart-summary {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 3px solid #dee2e6;
+        }
+        .cart-summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .cart-summary-label {
+            font-size: 1rem;
+            color: #495057;
+            font-weight: 500;
+        }
+        .cart-summary-value {
+            font-size: 1rem;
+            color: #212529;
+            font-weight: 600;
+        }
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+        .cart-total-label {
+            font-size: 1.2rem;
+            color: #2a6b52;
+            font-weight: 700;
+        }
+        .cart-total-value {
+            font-size: 1.5rem;
+            color: #469729;
+            font-weight: 800;
+        }
+        .cart-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        .cart-actions button {
+            flex: 1;
+        }
+        @media (max-width: 600px) {
+            .cart-item {
+                grid-template-columns: 60px 1fr;
+                gap: 0.75rem;
+            }
+            .cart-item-image {
+                width: 60px;
+                height: 60px;
+            }
+            .cart-item-actions {
+                grid-column: 1 / -1;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+        
+        /* Additional Mobile Enhancements */
+        @media (max-width: 480px) {
+            /* Reservation Modal Mobile */
+            #reservationConfirmModal .modal-content-custom {
+                max-width: 98%;
+                margin: 0.5rem;
+            }
+            
+            #reservationConfirmModal .modal-header {
+                padding: 0.75rem 1rem;
+            }
+            
+            #reservationConfirmModal .modal-header h3 {
+                font-size: 1.1rem;
+            }
+            
+            #reservationConfirmModal .modal-body {
+                padding: 1rem;
+            }
+            
+            .form-group label {
+                font-size: 0.85rem;
+            }
+            
+            .form-control {
+                padding: 0.5rem;
+                font-size: 0.85rem;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .form-actions button {
+                width: 100%;
+            }
+        }
+        
+        /* Touch-friendly adjustments */
+        @media (hover: none) and (pointer: coarse) {
+            /* Increase touch targets for mobile devices */
+            .reserve-btn {
+                min-height: 44px;
+            }
+            
+            .cart-qty-btn {
+                min-width: 28px;
+                min-height: 28px;
+            }
+            
+            .cart-remove-btn {
+                min-height: 32px;
+                min-width: 60px;
+            }
+            
+            .variant-chip {
+                min-height: 32px;
+                padding: 0.4rem 0.7rem;
+            }
+            
+            .searchButton,
+            .cartContainer {
+                min-width: 44px;
+                min-height: 44px;
+            }
+            
+            .carousel-btn {
+                min-width: 40px;
+                min-height: 40px;
+            }
+        }
+        
+        /* Header Icons Container */
+        .header-icons-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Cart and My Reservations Buttons - Uniform Style */
+        .cartContainer,
+        .my-reservations-btn {
+            background: rgba(255,255,255,0.2) !important;
+            backdrop-filter: blur(10px) !important;
+            border-radius: 50% !important;
+            width: 50px !important;
+            height: 50px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.3s ease !important;
+            border: none !important;
+            cursor: pointer;
+        }
+        
+        .cartContainer:hover,
+        .my-reservations-btn:hover {
+            background: rgba(255,255,255,0.3) !important;
+            transform: scale(1.1) !important;
+        }
+        
+        .cartContainer i,
+        .my-reservations-btn i {
+            color: white !important;
+            font-size: 1.3rem !important;
+        }
+        
+        /* Reservation Item Card */
+        .reservation-item-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .reservation-item-card.cancellable {
+            border-color: #ffc107;
+            background: linear-gradient(135deg, #fffbf0 0%, #fff8e1 100%);
+        }
+        
+        .reservation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .reservation-code {
+            font-weight: 700;
+            color: #2a6b52;
+            font-size: 1.1rem;
+        }
+        
+        .reservation-status {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: #000;
+        }
+        
+        .cancel-timer {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .timer-display {
+            font-size: 1.2rem;
+            font-family: monospace;
+            margin-left: auto;
+        }
+        
+        .cancel-btn-reservation {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .cancel-btn-reservation:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+        
+        .cancel-btn-reservation:disabled {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .reservation-items-list {
+            margin: 1rem 0;
+        }
+        
+        .reservation-item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            color: #495057;
+        }
+        
+        .reservation-empty {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+        
+        .reservation-empty i {
+            font-size: 3rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
+        }
+    </style>
 </head>
 <body>
+    <!-- Toast Notification -->
+    <div class="toast-notification" id="toastNotification">
+        <div class="toast-icon">
+            <i class="fa-solid fa-check"></i>
+        </div>
+        <div class="toast-content">
+            <div class="toast-title">Added to Cart</div>
+            <div class="toast-message" id="toastMessage">Product added successfully</div>
+        </div>
+        <button class="toast-close" onclick="hideToast()" aria-label="Close">
+            <i class="fa-solid fa-times"></i>
+        </button>
+    </div>
+
     <div class="headerContainer">
         <div class="brandContainer">
             <div class="logoHolder">
@@ -25,65 +1328,108 @@
                 <i class="fa-solid fa-magnifying-glass"></i>
             </button>
         </div>
-        <div class="cartContainer" role="button" aria-label="Shopping cart">
-            <i class="fa-solid fa-cart-shopping"></i>
+        <div class="header-icons-container">
+            <button class="my-reservations-btn" id="myReservationsBtn" role="button" aria-label="My Reservations">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </button>
+            <div class="cartContainer" role="button" aria-label="Shopping cart">
+                <i class="fa-solid fa-cart-shopping"></i>
+            </div>
+        </div>
+        </button>
+    </div>
+    
+    <!-- My Reservations Modal -->
+    <div id="myReservationsModal" class="modal" style="display:none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+        <div class="modal-content" style="background-color: #fff; margin: 5% auto; padding: 0; border-radius: 12px; max-width: 700px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); animation: slideDown 0.3s ease;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #2a6b52 0%, #1e4d3a 100%); color: white; padding: 1.5rem; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-clock-rotate-left"></i> My Reservations</h3>
+                <button class="close-modal" id="closeMyReservationsModal" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.5rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s;" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 2rem; max-height: 60vh; overflow-y: auto;">
+                <div id="myReservationsList">
+                    <div style="text-align: center; padding: 2rem; color: #666;">
+                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: #469729;"></i>
+                        <p style="margin: 0.5rem 0 0 0;">Loading your reservations...</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+    
     <div class="contentContainer">
         <div class="carousel-section">
-            <h2>Newly Stocked Items</h2>
+            <h2><%= carouselData.title %></h2>
             <div class="carousel-container" id="newStockCarousel">
-                <button class="carousel-btn left" id="carouselPrev">&#10094;</button>
-                <div class="carousel-items">
-                    <% if (newProducts && newProducts.length) { %>
-                        <% newProducts.forEach(function(product, idx) { %>
-                        <div class="carousel-item <%= idx === 0 ? 'active' : '' %>">
-                            <img src="<%= product.ImagePath ? '/images/' + product.ImagePath : '/images/sample-product.jpg' %>" alt="<%= product.ItemName %>">
+                <div class="carousel-items" id="carouselItemsContainer">
+                    <% if (carouselData.items && carouselData.items.length) { %>
+                        <% carouselData.items.forEach(function(product, idx) { %>
+                        <div class="carousel-item">
+                            <img src="<%=
+                                product.ImagePath
+                                    ? (product.ImagePath.indexOf('http') === 0 || product.ImagePath.indexOf('//') === 0 ? product.ImagePath : '/images/' + product.ImagePath)
+                                    : '/images/sample-product.jpg'
+                            %>" alt="<%= product.ItemName %>">
                             <div class="carousel-caption">
                                 <h4><%= product.ItemName %></h4>
-                                <p>₱<%= product.Price %></p>
+                                <div class="carousel-price">
+                                    <span class="regular-price">₱<%= parseFloat(product.Price).toFixed(2) %></span>
+                                </div>
+                                <button class="carousel-add-to-cart" onclick="addToCart(<%= product.ItemID %>)">Add to cart</button>
                             </div>
                         </div>
                         <% }); %>
                     <% } else { %>
-                        <div class="carousel-item active">
+                        <div class="carousel-item">
                             <img src="/images/sample-product.jpg" alt="New Item">
                             <div class="carousel-caption">
-                                <h4>No new products</h4>
-                                <p>₱0.00</p>
+                                <h4>No products available</h4>
+                                <div class="carousel-price">
+                                    <span class="regular-price">₱0.00</span>
+                                </div>
+                                <div class="carousel-rating">
+                                    <span class="stars">☆☆☆☆☆</span>
+                                    <span class="review-count">0 Review(s)</span>
+                                </div>
+                                <button class="carousel-add-to-cart" disabled>Add to cart</button>
                             </div>
                         </div>
                     <% } %>
                 </div>
-                <button class="carousel-btn right" id="carouselNext">&#10095;</button>
             </div>
         </div>
         <div class="catalog-container">
             <div class="sidebar">
-                <div class="filter-section">
-                    <h3>Categories</h3>
-                    <div class="filter-options">
-                        <% if (categories && categories.length) { %>
-                            <% categories.forEach(function(cat) { %>
-                                <label><input type="checkbox" name="category" value="<%= cat.CategoryID %>"> <%= cat.CategoryName %></label>
-                            <% }); %>
-                        <% } else { %>
-                            <label>No categories found</label>
-                        <% } %>
+                <button class="filter-toggle-btn" id="filterToggleBtn" style="display: none;">
+                    <span><i class="fa-solid fa-filter"></i> Filters</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="filter-content">
+                    <div class="filter-section">
+                        <h3>Categories</h3>
+                        <div class="filter-options">
+                            <% if (categories && categories.length) { %>
+                                <% categories.forEach(function(cat) { %>
+                                    <label><input type="checkbox" name="category" value="<%= cat.CategoryID %>"> <%= cat.CategoryName %></label>
+                                <% }); %>
+                            <% } else { %>
+                                <label>No categories found</label>
+                            <% } %>
+                        </div>
                     </div>
-                </div>
-                <div class="filter-section">
-                    <h3>Price Range</h3>
-                    <div class="filter-options">
-                        <label><input type="range" id="priceRange" min="0" max="10000" step="10"></label>
-                        <span id="priceValue">₱0 - ₱10000</span>
+                    <div class="filter-section">
+                        <h3>Price Range</h3>
+                        <div class="filter-options">
+                            <label><input type="range" id="priceRange" min="0" max="10000" step="10"></label>
+                            <span id="priceValue">₱0 - ₱10000</span>
+                        </div>
                     </div>
-                </div>
-                <div class="filter-section">
-                    <h3>Stock Status</h3>
-                    <div class="filter-options">
-                        <label><input type="checkbox" name="stock" value="in-stock"> In Stock</label>
-                        <label><input type="checkbox" name="stock" value="low-stock"> Low Stock</label>
+                    <div class="filter-section">
+                        <h3>Stock Status</h3>
+                        <div class="filter-options">
+                            <label><input type="checkbox" name="stock" value="in-stock"> In Stock</label>
+                            <label><input type="checkbox" name="stock" value="low-stock"> Low Stock</label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -91,7 +1437,11 @@
                 <% if (products && products.length) { %>
                     <% products.forEach(function(product, idx) { %>
                         <div class="product-card" data-idx="<%= idx %>">
-                            <img src="<%= product.ImagePath ? '/images/' + product.ImagePath : '/images/sample-product.jpg' %>" alt="<%= product.ItemName %>" class="product-image">
+                                                        <img src="<%=
+                                                                product.ImagePath
+                                                                    ? (product.ImagePath.indexOf('http') === 0 || product.ImagePath.indexOf('//') === 0 ? product.ImagePath : '/images/' + product.ImagePath)
+                                                                    : '/images/sample-product.jpg'
+                                                            %>" alt="<%= product.ItemName %>" class="product-image">
                             <h3 class="product-name"><%= product.ItemName %></h3>
                             <p class="product-price">₱<%= product.Price %></p>
                             <p class="stock-count"><%= product.StockQuantity %> in stock</p>
@@ -103,65 +1453,1038 @@
                 <% } %>
             </div>
         </div>
-        <!-- Product Details Modal -->
-        <div id="productDetailsModal" class="modal-centered" style="display:none;">
-            <div class="modal-content-custom" id="productDetailsContent">
-                <span class="close-modal" id="closeProductDetailsModal">&times;</span>
-                <h3 id="modalProductName"></h3>
-                <img id="modalProductImage" src="" alt="Product Image" style="max-width:220px; margin-bottom:1rem; border-radius:8px;">
-                <p><strong>Price:</strong> <span id="modalProductPrice"></span></p>
-                <p><strong>Stock:</strong> <span id="modalProductStock"></span></p>
-                <p><strong>Category:</strong> <span id="modalProductCategory"></span></p>
-                <p><strong>Description:</strong> <span id="modalProductDescription"></span></p>
+                <!-- Product Details Modal -->
+                <div id="productDetailsModal" class="modal-centered">
+                        <div class="modal-content-custom" id="productDetailsContent">
+                                <div class="modal-header">
+                                    <h3 id="modalProductName" style="margin: 0; font-size: 1.5rem;">Product Details</h3>
+                                    <button class="close-modal" id="closeProductDetailsModal" aria-label="Close">&times;</button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="product-detail-grid">
+                                        <div>
+                                            <img id="modalProductImage" src="" alt="Product Image" class="product-detail-image">
+                                        </div>
+                                        <div class="product-detail-info">
+                                            <div class="product-detail-price" id="modalProductPrice">₱0.00</div>
+                                            <div class="product-detail-meta">
+                                                <p><strong>Stock:</strong> <span id="modalProductStock"></span></p>
+                                                <p><strong>Category:</strong> <span id="modalProductCategory"></span></p>
+                                            </div>
+                                            <div class="product-description">
+                                                <strong style="color: #2a6b52; display: block; margin-bottom: 0.5rem;">Description</strong>
+                                                <span id="modalProductDescription">No description available.</span>
+                                            </div>
+                                            <div id="modalVariantWrapper" class="modal-variant-wrapper"></div>
+                                            <div class="product-actions">
+                                                <label style="font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                                                    Quantity: 
+                                                    <input type="number" id="modalReserveQty" value="1" min="1" class="qty-input">
+                                                </label>
+                                                <button id="modalReserveBtn" class="btn btn-primary" style="flex: 1;">
+                                                    <i class="fa-solid fa-cart-plus" style="margin-right: 0.5rem;"></i>Add to Cart
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
+                </div>
+                <!-- Reservation Cart Sidebar -->
+                <div class="cart-sidebar-overlay" id="cartSidebarOverlay"></div>
+                <div id="reservationCartSidebar">
+                    <div class="cart-header">
+                        <h3><i class="fa-solid fa-cart-shopping" style="margin-right: 0.5rem;"></i>Cart</h3>
+                        <button class="close-cart-btn" id="closeReservationCart" aria-label="Close">&times;</button>
+                    </div>
+                    <div class="cart-body">
+                            <div id="reservationCartItems">
+                                <div class="cart-empty">
+                                    <i class="fa-solid fa-cart-shopping"></i>
+                                    <p>No items in cart</p>
+                                </div>
+                            </div>
+                            <div id="cartSummary" class="cart-summary" style="display:none;">
+                                <div class="cart-summary-row">
+                                    <span class="cart-summary-label">Total Items:</span>
+                                    <span class="cart-summary-value" id="cartTotalItems">0</span>
+                                </div>
+                                <div class="cart-total">
+                                    <span class="cart-total-label">Total Amount:</span>
+                                    <span class="cart-total-value" id="cartTotalAmount">₱0.00</span>
+                                </div>
+                            </div>
+                            <div class="cart-actions">
+                                <button id="confirmReservationBtn" class="btn btn-primary">
+                                    <i class="fa-solid fa-check" style="margin-right: 0.5rem;"></i>Confirm Reservation
+                                </button>
+                                <button id="clearReservationCartBtn" class="btn btn-secondary">
+                                    <i class="fa-solid fa-trash" style="margin-right: 0.5rem;"></i>Clear Cart
+                                </button>
+                            </div>
+                        </div>
+                    <div id="cartSummary" class="cart-summary" style="display:none;">
+                        <div class="cart-summary-row">
+                            <span class="cart-summary-label">Total Items:</span>
+                            <span class="cart-summary-value" id="cartTotalItems">0</span>
+                        </div>
+                        <div class="cart-total">
+                            <span class="cart-total-label">Total:</span>
+                            <span class="cart-total-value" id="cartTotalAmount">₱0.00</span>
+                        </div>
+                        <div class="cart-actions">
+                            <button id="confirmReservationBtn" class="btn btn-primary">
+                                <i class="fa-solid fa-check" style="margin-right: 0.5rem;"></i>Confirm Reservation
+                            </button>
+                            <button id="clearReservationCartBtn" class="btn btn-secondary">
+                                <i class="fa-solid fa-trash" style="margin-right: 0.5rem;"></i>Clear Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Reservation Confirmation Modal -->
+                <div id="reservationConfirmModal" class="modal-centered">
+                    <div class="modal-content-custom" id="reservationConfirmContent">
+                        <div class="modal-header">
+                            <h3>
+                                <i class="fa-solid fa-clipboard-check"></i>
+                                Complete Your Reservation
+                            </h3>
+                            <button class="close-modal" id="closeReservationConfirmModal" aria-label="Close">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="reservation-info">
+                                <p>
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    Please fill in your details below to complete your reservation. You'll receive a confirmation code after submission.
+                                </p>
+                            </div>
+                            <form id="reservationForm" autocomplete="on">
+                                <div class="form-group">
+                                    <label for="resStudentNumber">
+                                        <i class="fa-solid fa-id-card"></i>
+                                        Student ID
+                                    </label>
+                                    <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
+                                        <div style="flex: 1;">
+                                            <input 
+                                                type="text" 
+                                                id="resStudentNumber" 
+                                                placeholder="Enter your student ID" 
+                                                class="form-control"
+                                                required
+                                            />
+                                            <div class="invalid-feedback" id="resStudentError"></div>
+                                            <div id="studentVerifiedStatus" style="display: none; margin-top: 0.5rem; padding: 0.5rem; background: #d4edda; color: #155724; border-radius: 6px; font-size: 0.85rem;">
+                                                <i class="fa-solid fa-check-circle"></i> Verified: <strong id="verifiedStudentName"></strong>
+                                            </div>
+                                        </div>
+                                        <button type="button" id="verifyStudentBtn" class="btn btn-primary" style="white-space: nowrap;">
+                                            <i class="fa-solid fa-shield-check"></i> Verify
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="resName">
+                                        <i class="fa-solid fa-user"></i>
+                                        Full Name
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        id="resName" 
+                                        placeholder="Verify student ID first" 
+                                        class="form-control"
+                                        autocomplete="name"
+                                        required
+                                        disabled
+                                        readonly
+                                    />
+                                    <div class="invalid-feedback" id="resNameError"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="resEmail">
+                                        <i class="fa-solid fa-envelope"></i>
+                                        Email Address
+                                    </label>
+                                    <input 
+                                        type="email" 
+                                        id="resEmail" 
+                                        placeholder="Verify student ID first" 
+                                        class="form-control"
+                                        autocomplete="email"
+                                        required
+                                        disabled
+                                    />
+                                    <div class="invalid-feedback" id="resEmailError"></div>
+                                </div>
+                                <div class="invalid-feedback" id="reservationSubmitError"></div>
+                                <div class="reservation-actions">
+                                    <button type="submit" id="submitReservationBtn" class="btn btn-success" disabled>
+                                        <i class="fa-solid fa-check-circle" style="margin-right: 0.5rem;"></i>
+                                        Submit Reservation
+                                    </button>
+                                    <button type="button" id="cancelReservationConfirmBtn" class="btn btn-secondary">
+                                        <i class="fa-solid fa-times-circle" style="margin-right: 0.5rem;"></i>
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+    </div>
+    
+    <!-- Professional Footer -->
+    <footer class="catalog-footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <i class="fa-solid fa-shop"></i>
+                        <h3>GCCI Giftstore</h3>
+                    </div>
+                    <p class="footer-description">
+                        Your trusted school store for quality merchandise, supplies, and gifts. 
+                        Serving the GCCI community with excellence.
+                    </p>
+                    <div class="footer-social">
+                        <a href="https://www.facebook.com/GingoogCityCollegesInc." target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Facebook">
+                            <i class="fa-brands fa-facebook"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Contact Us</h4>
+                    <ul class="footer-contact">
+                        <li>
+                            <i class="fa-solid fa-location-dot"></i>
+                            <span>Macopa St., Paz Village Subdivision,<br>Gingoog City, Philippines</span>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-phone"></i>
+                            <span>(088) 861 1432</span>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-envelope"></i>
+                            <span>info@gcci.edu.ph</span>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-clock"></i>
+                            <span>Mon - Fri: 8AM - 5PM</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 GCCI Giftstore System. All rights reserved.</p>
+                <p class="footer-credits">
+                    <i class="fa-solid fa-code"></i> Powered by AI Technology
+                </p>
             </div>
         </div>
-    </div>
+    </footer>
+    
     <script>
-const products = <%- JSON.stringify(products || []) %>;
-const categories = <%- JSON.stringify(categories || []) %>;
+    const products = <%- JSON.stringify(products || []) %>;
+    const categories = <%- JSON.stringify(categories || []) %>;
+    // reservationCart moved to module scope so all handlers can access it
+    const reservationCart = [];
 
-        // Carousel functionality
-        const carouselItems = document.querySelectorAll('#newStockCarousel .carousel-item');
-        let currentIndex = 0;
-        function showCarouselItem(index) {
-            carouselItems.forEach((item, i) => {
-                item.classList.toggle('active', i === index);
-            });
+    // Toast notification functions
+    function showToast(productName, quantity = 1) {
+        const toast = document.getElementById('toastNotification');
+        const message = document.getElementById('toastMessage');
+        if (toast && message) {
+            message.textContent = `${productName} (${quantity}x) added to cart`;
+            toast.classList.add('show');
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                hideToast();
+            }, 3000);
         }
-        document.getElementById('carouselPrev').addEventListener('click', () => {
-            currentIndex = (currentIndex - 1 + carouselItems.length) % carouselItems.length;
-            showCarouselItem(currentIndex);
-        });
-        document.getElementById('carouselNext').addEventListener('click', () => {
-            currentIndex = (currentIndex + 1) % carouselItems.length;
-            showCarouselItem(currentIndex);
-        });
-        showCarouselItem(currentIndex);
+    }
 
-        // Product modal functionality
-        function getCategoryName(catId) {
-            const cat = categories.find(c => String(c.CategoryID) === String(catId));
-            return cat ? cat.CategoryName : '';
+    function hideToast() {
+        const toast = document.getElementById('toastNotification');
+        if (toast) {
+            toast.classList.remove('show');
         }
+    }
+
+    // Utility: get category name
+    function getCategoryName(catId) {
+        const cat = categories.find(c => String(c.CategoryID) === String(catId));
+        return cat ? cat.CategoryName : '';
+    }
+
+    // Reservation cart functions (global scope for access from all handlers)
+    function addToCart(itemId, qty, variantId) {
+        qty = parseInt(qty||1,10);
+        const match = reservationCart.find(i => String(i.ItemID) === String(itemId) && String(i.VariantID||'') === String(variantId||''));
+        if (match) match.Quantity = Math.max(1, match.Quantity + qty);
+        else reservationCart.push({ ItemID: parseInt(itemId,10), VariantID: variantId || null, Quantity: qty });
+        renderCartItems();
+        
+        // Show toast notification instead of alert
+        const product = products.find(p => String(p.ItemID) === String(itemId));
+        if (product) {
+            showToast(product.ItemName, qty);
+        }
+    }
+
+    function removeFromCart(itemId, variantId) {
+        const idx = reservationCart.findIndex(i => String(i.ItemID) === String(itemId) && String(i.VariantID||'') === String(variantId||''));
+        if (idx >= 0) reservationCart.splice(idx,1);
+        renderCartItems();
+    }
+
+    function updateCartQuantity(itemId, variantId, qty) {
+        const it = reservationCart.find(i => String(i.ItemID) === String(itemId) && String(i.VariantID||'') === String(variantId||''));
+        if (it) it.Quantity = Math.max(1, parseInt(qty||1,10));
+        renderCartItems();
+    }
+
+    function renderCartItems() {
+        const container = document.getElementById('reservationCartItems');
+        const summaryDiv = document.getElementById('cartSummary');
+        if (!container) return;
+        if (!reservationCart.length) {
+            container.innerHTML = '<div class="cart-empty"><i class="fa-solid fa-cart-shopping"></i><p>No items in cart</p></div>';
+            if (summaryDiv) summaryDiv.style.display = 'none';
+            return;
+        }
+        let totalItems = 0; let totalAmount = 0;
+        container.innerHTML = reservationCart.map(ci => {
+            const prod = products.find(p => String(p.ItemID) === String(ci.ItemID)) || {};
+            const variant = (prod.Variants || []).find(v => String(v.VariantID) === String(ci.VariantID)) || null;
+            const itemName = prod.ItemName || 'Unknown Product';
+            const variantText = variant ? `${variant.Size || 'N/A'}` : '';
+            const price = variant && variant.Price != null ? Number(variant.Price) : Number(prod.Price || 0);
+            const itemTotal = price * ci.Quantity;
+            const imageSrc = formatImagePath(prod);
+            const variantIdForJs = ci.VariantID != null ? `'${ci.VariantID}'` : 'null';
+            totalItems += ci.Quantity; totalAmount += itemTotal;
+            return `<div class="cart-item" data-item-id="${ci.ItemID}" data-variant-id="${ci.VariantID||""}">>
+                <img src="${imageSrc}" alt="${escapeHtml(itemName)}" class="cart-item-image">
+                <div class="cart-item-details">
+                    <p class="cart-item-name">${escapeHtml(itemName)}</p>
+                    ${variantText ? `<p class="cart-item-variant">Size: ${escapeHtml(variantText)}</p>` : ''}
+                    <p class="cart-item-price">₱${price.toFixed(2)} × ${ci.Quantity}</p>
+                </div>
+                <div class="cart-item-actions">
+                    <div class="cart-qty-control">
+                        <button class="cart-qty-btn" onclick="(function(){ const newQty = ${ci.Quantity} - 1; if (newQty >= 1) updateCartQuantity(${ci.ItemID}, ${variantIdForJs}, newQty); })()" aria-label="Decrease quantity">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                        <span class="cart-qty-display">${ci.Quantity}</span>
+                        <button class="cart-qty-btn" onclick="(function(){ updateCartQuantity(${ci.ItemID}, ${variantIdForJs}, ${ci.Quantity + 1}); })()" aria-label="Increase quantity">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    <button class="cart-remove-btn" onclick="(function(){ removeFromCart(${ci.ItemID}, ${variantIdForJs}); })()">
+                        <i class="fa-solid fa-trash" style="margin-right: 0.25rem;"></i>Remove
+                    </button>
+                </div>
+            </div>`;
+        }).join('');
+        if (summaryDiv) {
+            summaryDiv.style.display = 'block';
+            const totalItemsEl = document.getElementById('cartTotalItems');
+            const totalAmountEl = document.getElementById('cartTotalAmount');
+            if (totalItemsEl) totalItemsEl.textContent = totalItems;
+            if (totalAmountEl) totalAmountEl.textContent = '₱' + totalAmount.toFixed(2);
+        }
+    }
+
+    // Render products into .product-grid
+    function formatImagePath(p) {
+        if (!p) return '/images/sample-product.jpg';
+        if (p.ImagePath) {
+            if (String(p.ImagePath).indexOf('http') === 0 || String(p.ImagePath).indexOf('//') === 0) return p.ImagePath;
+            return '/images/' + p.ImagePath;
+        }
+        return '/images/sample-product.jpg';
+    }
+
+    function renderProducts(list) {
+        const grid = document.querySelector('.product-grid');
+        if (!grid) return;
+        if (!Array.isArray(list) || list.length === 0) {
+            grid.innerHTML = '<div>No products found.</div>';
+            return;
+        }
+        grid.innerHTML = list.map((p) => {
+            const hasVariants = Array.isArray(p.Variants) && p.Variants.length > 0;
+            var variantHtml = '';
+            if (hasVariants) {
+                // render inline variant chips (size buttons)
+                variantHtml = '<div class="variant-wrapper"><div class="variant-chips">' + p.Variants.map(function(v){
+                    var label = escapeHtml(String(v.Size || 'Variant'));
+                    var priceText = (v.Price != null && v.Price !== '') ? (' ₱' + Number(v.Price).toFixed(2)) : '';
+                    var stockText = v.StockQuantity != null ? (' (' + v.StockQuantity + ')') : '';
+                    return '<button class="variant-chip" data-variant-id="' + v.VariantID + '" data-price="' + (v.Price||'') + '" data-stock="' + (v.StockQuantity||'') + '">' + label + priceText + '<span class="chip-stock">' + stockText + '</span></button>';
+                }).join('') + '</div></div>';
+            }
+
+            return `
+                <div class="product-card" data-item-id="${p.ItemID}">
+                    <img src="${formatImagePath(p)}" alt="${escapeHtml(p.ItemName||'')}" class="product-image">
+                    <h3 class="product-name">${escapeHtml(p.ItemName||'')}</h3>
+                    <p class="product-price">₱${Number(p.Price||0).toFixed(2)}</p>
+                    <p class="stock-count">${p.StockQuantity} in stock</p>
+                    ${variantHtml}
+                    <button class="reserve-btn">Reserve</button>
+                </div>
+            `;
+        }).join('');
+
+        // Attach event listeners
+        // Product card click opens modal (always). Variant chips are shown inline.
         document.querySelectorAll('.product-card').forEach(card => {
+            const itemId = card.getAttribute('data-item-id');
             card.addEventListener('click', function(e) {
-                // Prevent reserve button from triggering modal
-                if (e.target.classList.contains('reserve-btn')) return;
-                const idx = card.getAttribute('data-idx');
-                const product = products[idx];
+            // If user clicked a Reserve button, let its handler run
+            if (e.target && e.target.classList && e.target.classList.contains('reserve-btn')) return;
+                const product = products.find(x => String(x.ItemID) === String(itemId));
                 if (!product) return;
+                // open product modal and populate
                 document.getElementById('modalProductName').textContent = product.ItemName;
-                document.getElementById('modalProductImage').src = product.ImagePath ? '/images/' + product.ImagePath : '/images/sample-product.jpg';
-                document.getElementById('modalProductPrice').textContent = '₱' + product.Price;
+                document.getElementById('modalProductImage').src = formatImagePath(product);
+                document.getElementById('modalProductPrice').textContent = '₱' + (Number(product.Price||0).toFixed(2));
                 document.getElementById('modalProductStock').textContent = product.StockQuantity + ' in stock';
                 document.getElementById('modalProductCategory').textContent = getCategoryName(product.CategoryID);
                 document.getElementById('modalProductDescription').textContent = product.Description || 'No description.';
-                document.getElementById('productDetailsModal').style.display = 'flex';
+                const modal = document.getElementById('productDetailsModal');
+                modal.dataset.itemId = product.ItemID;
+                document.getElementById('modalReserveQty').value = '1';
+                // populate modal variant selector if variants exist (for uniform UI)
+                const modalVariantWr = document.getElementById('modalVariantWrapper');
+                const hasVariants = Array.isArray(product.Variants) && product.Variants.length > 0;
+                if (modalVariantWr) {
+                    if (hasVariants) {
+                        // build select
+                        const selHtml = ['<label style="font-weight:600;">Size:</label><select id="modalVariantSelect" class="form-control">'];
+                        selHtml.push('<option value="">Select size</option>');
+                        product.Variants.forEach(function(v) {
+                            const label = (v.Size || 'Variant') + (v.Price != null && v.Price !== '' ? (' - ₱' + Number(v.Price).toFixed(2)) : '');
+                            selHtml.push('<option value="' + v.VariantID + '" data-price="' + (v.Price||'') + '" data-stock="' + (v.StockQuantity||'') + '">' + escapeHtml(label) + '</option>');
+                        });
+                        selHtml.push('</select>');
+                        modalVariantWr.innerHTML = selHtml.join('');
+                        // pre-select first variant
+                        try { const msel = document.getElementById('modalVariantSelect'); if (msel) msel.selectedIndex = 1; } catch(_) {}
+                    } else {
+                        modalVariantWr.innerHTML = '';
+                    }
+                }
+                modal.style.display = 'flex';
+            });
+            // Variant chip clicks: choose a variant for this card
+            card.querySelectorAll('.variant-chip').forEach(chip => {
+                chip.addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    // deselect other chips in the same card
+                    card.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('selected'));
+                    chip.classList.add('selected');
+                });
             });
         });
-        document.getElementById('closeProductDetailsModal').onclick = function() {
-            document.getElementById('productDetailsModal').style.display = 'none';
+
+        // Reserve buttons add to cart (respect selected inline variant chip if present)
+        document.querySelectorAll('.reserve-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const card = e.target.closest('.product-card');
+                const id = card && card.getAttribute('data-item-id');
+                if (!id) return;
+                // look for selected variant chip
+                const selectedChip = card.querySelector('.variant-chip.selected');
+                const hasVariants = !!card.querySelector('.variant-chip');
+                const variantId = selectedChip ? selectedChip.getAttribute('data-variant-id') : null;
+                if (hasVariants && !variantId) {
+                    alert('Please select a size by clicking one of the size buttons.');
+                    return;
+                }
+                addToCart(id, 1, variantId);
+            });
+        });
+    }
+
+    function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // Filters
+    function applyFilters() {
+        const q = (document.querySelector('.searchInput')?.value || '').trim().toLowerCase();
+        // categories
+        const checkedCats = Array.from(document.querySelectorAll('input[name="category"]:checked')).map(i=>i.value);
+        const maxPrice = Number(document.getElementById('priceRange')?.value || 10000);
+        const inStockChecked = !!document.querySelector('input[name="stock"][value="in-stock"]:checked');
+        const lowStockChecked = !!document.querySelector('input[name="stock"][value="low-stock"]:checked');
+
+        const filtered = products.filter(p => {
+            if (!p) return false;
+            if (q) {
+                const inName = String(p.ItemName||'').toLowerCase().includes(q);
+                const catName = getCategoryName(p.CategoryID).toLowerCase();
+                const inCat = catName.includes(q);
+                if (!inName && !inCat) return false;
+            }
+            if (checkedCats.length && !checkedCats.includes(String(p.CategoryID))) return false;
+            if (!isNaN(maxPrice) && Number(p.Price || 0) > maxPrice) return false;
+            if (inStockChecked && !(Number(p.StockQuantity || 0) > 0)) return false;
+            if (lowStockChecked && !(Number(p.StockQuantity || 0) < 10)) return false;
+            return true;
+        });
+        renderProducts(filtered);
+    }
+
+    // Wire UI controls
+    document.querySelector('.searchButton')?.addEventListener('click', applyFilters);
+    document.querySelector('.searchInput')?.addEventListener('keydown', function(e){ if (e.key==='Enter') applyFilters(); });
+    document.querySelectorAll('input[name="category"]').forEach(ch => ch.addEventListener('change', applyFilters));
+    document.getElementById('priceRange')?.addEventListener('input', function(e){ const v = e.target.value || 0; document.getElementById('priceValue').textContent = '₱0 - ₱' + Number(v).toFixed(2); applyFilters(); });
+    document.querySelectorAll('input[name="stock"]').forEach(ch => ch.addEventListener('change', applyFilters));
+
+    // Cart sidebar event listeners
+    document.querySelector('.cartContainer')?.addEventListener('click', function(){
+        const sidebar = document.getElementById('reservationCartSidebar');
+        const overlay = document.getElementById('cartSidebarOverlay');
+        if (sidebar) sidebar.classList.add('open');
+        if (overlay) overlay.classList.add('active');
+        renderCartItems();
+    });
+    document.getElementById('closeReservationCart')?.addEventListener('click', function(){
+        document.getElementById('reservationCartSidebar')?.classList.remove('open');
+        document.getElementById('cartSidebarOverlay')?.classList.remove('active');
+    });
+    document.getElementById('cartSidebarOverlay')?.addEventListener('click', function(){
+        document.getElementById('reservationCartSidebar')?.classList.remove('open');
+        document.getElementById('cartSidebarOverlay')?.classList.remove('active');
+    });
+
+    // Modal close handlers
+    document.getElementById('closeProductDetailsModal').onclick = function() { document.getElementById('productDetailsModal').style.display = 'none'; };
+    document.getElementById('productDetailsModal').addEventListener('click', function(e){ if (e.target && e.target.id === 'productDetailsModal') document.getElementById('productDetailsModal').style.display = 'none'; });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { ['productDetailsModal','reservationConfirmModal'].forEach(function(id){ const m = document.getElementById(id); if (m && m.style.display === 'flex') m.style.display = 'none'; }); document.getElementById('reservationCartSidebar')?.classList.remove('open'); document.getElementById('cartSidebarOverlay')?.classList.remove('active'); } });
+
+    // Modal Reserve button handler (from modal)
+    // Modal Reserve button adds to cart (respect modal variant selection)
+    document.getElementById('modalReserveBtn')?.addEventListener('click', function(){
+        const modal = document.getElementById('productDetailsModal');
+        const itemId = modal && modal.dataset && modal.dataset.itemId ? parseInt(modal.dataset.itemId,10) : null;
+        const qtyInput = document.getElementById('modalReserveQty');
+        const quantity = qtyInput ? parseInt(qtyInput.value,10) : 1;
+        if (!itemId) return alert('Missing item information');
+        if (!quantity || quantity < 1) return alert('Please enter a valid quantity');
+        const modalSelect = document.getElementById('modalVariantSelect');
+        const variantId = modalSelect && modalSelect.value ? modalSelect.value : null;
+        // if item has variants and none selected, ask user to select
+        const product = products.find(p => String(p.ItemID) === String(itemId));
+        const hasVariants = product && Array.isArray(product.Variants) && product.Variants.length > 0;
+        if (hasVariants && !variantId) return alert('Please select a size before reserving.');
+        addToCart(itemId, quantity, variantId);
+        modal.style.display = 'none';
+    });
+
+    // Cart modal actions
+    document.getElementById('clearReservationCartBtn')?.addEventListener('click', function(){ reservationCart.length = 0; renderCartItems(); });
+    
+    // Student verification
+    let studentVerified = false;
+    let verifiedStudentData = null;
+
+    document.getElementById('verifyStudentBtn')?.addEventListener('click', async function(){
+        const studentIdInput = document.getElementById('resStudentNumber');
+        const studentId = studentIdInput?.value?.trim();
+        const errorEl = document.getElementById('resStudentError');
+        const statusEl = document.getElementById('studentVerifiedStatus');
+        const nameDisplayEl = document.getElementById('verifiedStudentName');
+        const nameInput = document.getElementById('resName');
+        const emailInput = document.getElementById('resEmail');
+        const submitBtn = document.getElementById('submitReservationBtn');
+        const verifyBtn = document.getElementById('verifyStudentBtn');
+        
+        if(!studentId) {
+            if(errorEl) errorEl.textContent = 'Please enter a student ID';
+            if(studentIdInput) studentIdInput.classList.add('error');
+            return;
+        }
+        
+        // Clear previous errors
+        if(errorEl) errorEl.textContent = '';
+        if(studentIdInput) studentIdInput.classList.remove('error');
+        
+        const prevText = verifyBtn.textContent;
+        try {
+            verifyBtn.disabled = true;
+            verifyBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+            
+            const res = await fetch('/api/verify-student/' + encodeURIComponent(studentId));
+            const data = await res.json();
+            
+            if(data.success && data.student) {
+                // Student verified
+                studentVerified = true;
+                verifiedStudentData = data.student;
+                
+                // Show success status
+                if(statusEl) {
+                    statusEl.style.display = 'block';
+                    if(nameDisplayEl) nameDisplayEl.textContent = data.student.full_name;
+                }
+                
+                // Populate and enable name field (read-only)
+                if(nameInput) {
+                    nameInput.value = data.student.full_name;
+                    nameInput.disabled = false;
+                }
+                
+                // Enable email field
+                if(emailInput) {
+                    emailInput.disabled = false;
+                    emailInput.placeholder = 'your.email@example.com';
+                    emailInput.focus();
+                }
+                
+                // Enable submit button
+                if(submitBtn) submitBtn.disabled = false;
+                
+                // Disable student ID input and verify button
+                if(studentIdInput) studentIdInput.disabled = true;
+                verifyBtn.disabled = true;
+                verifyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Verified';
+                verifyBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                
+            } else {
+                // Student not found
+                if(errorEl) errorEl.textContent = 'Student ID not found in our records. Please check and try again.';
+                if(studentIdInput) studentIdInput.classList.add('error');
+                studentVerified = false;
+                verifiedStudentData = null;
+            }
+        } catch(err) {
+            if(errorEl) errorEl.textContent = 'Verification failed. Please try again.';
+            if(studentIdInput) studentIdInput.classList.add('error');
+            console.error('Verification error:', err);
+        } finally {
+            if(!studentVerified) {
+                verifyBtn.disabled = false;
+                verifyBtn.innerHTML = prevText;
+            }
+        }
+    });
+    
+    document.getElementById('confirmReservationBtn')?.addEventListener('click', function(){
+        if (!reservationCart.length) return alert('Cart is empty');
+        const modal = document.getElementById('reservationConfirmModal');
+        if (modal) {
+            // Reset verification state
+            studentVerified = false;
+            verifiedStudentData = null;
+            
+            // Reset form
+            const studentIdInput = document.getElementById('resStudentNumber');
+            const nameInput = document.getElementById('resName');
+            const emailInput = document.getElementById('resEmail');
+            const submitBtn = document.getElementById('submitReservationBtn');
+            const verifyBtn = document.getElementById('verifyStudentBtn');
+            const statusEl = document.getElementById('studentVerifiedStatus');
+            
+            if(studentIdInput) {
+                studentIdInput.value = '';
+                studentIdInput.disabled = false;
+                studentIdInput.classList.remove('error');
+            }
+            if(nameInput) {
+                nameInput.value = '';
+                nameInput.disabled = true;
+                nameInput.placeholder = 'Verify student ID first';
+            }
+            if(emailInput) {
+                emailInput.value = '';
+                emailInput.disabled = true;
+                emailInput.placeholder = 'Verify student ID first';
+            }
+            if(submitBtn) submitBtn.disabled = true;
+            if(verifyBtn) {
+                verifyBtn.disabled = false;
+                verifyBtn.innerHTML = '<i class="fa-solid fa-shield-check"></i> Verify';
+                verifyBtn.style.background = '';
+            }
+            if(statusEl) statusEl.style.display = 'none';
+            
+            clearReservationErrors();
+            modal.style.display = 'flex';
+            if(studentIdInput) studentIdInput.focus();
+        }
+    });
+    document.getElementById('cancelReservationConfirmBtn')?.addEventListener('click', function(){ document.getElementById('reservationConfirmModal').style.display = 'none'; });
+    document.getElementById('closeReservationConfirmModal')?.addEventListener('click', function(){ document.getElementById('reservationConfirmModal').style.display = 'none'; });
+    document.getElementById('reservationConfirmModal')?.addEventListener('click', function(e){ if (e.target && e.target.id === 'reservationConfirmModal') document.getElementById('reservationConfirmModal').style.display = 'none'; });
+    document.getElementById('submitReservationBtn')?.addEventListener('click', async function(e){
+        e.preventDefault();
+        
+        if(!studentVerified || !verifiedStudentData) {
+            alert('Please verify your student ID first');
+            return;
+        }
+        
+        const nameEl = document.getElementById('resName');
+        const emailEl = document.getElementById('resEmail');
+        const studentEl = document.getElementById('resStudentNumber');
+        const name = nameEl?.value?.trim() || '';
+        const email = emailEl?.value?.trim() || '';
+        const studentNo = studentEl?.value?.trim() || '';
+        if (!reservationCart.length) return alert('Cart is empty');
+
+        // Basic validation (inline)
+        clearReservationErrors();
+        let hasError = false;
+        const emailPattern = /^\S+@\S+\.\S+$/;
+        if (!name) { 
+            document.getElementById('resNameError').textContent = 'Please enter your full name.'; 
+            if (nameEl) { nameEl.classList.add('error'); nameEl.focus(); }
+            hasError = true; 
+        }
+        if (!email || !emailPattern.test(email)) { 
+            document.getElementById('resEmailError').textContent = 'Please enter a valid email address.'; 
+            if (emailEl) { emailEl.classList.add('error'); if (!hasError) emailEl.focus(); }
+            hasError = true; 
+        }
+        if (!studentNo) { 
+            document.getElementById('resStudentError').textContent = 'Please enter your student ID or school.'; 
+            if (studentEl) { studentEl.classList.add('error'); if (!hasError) studentEl.focus(); }
+            hasError = true; 
+        }
+        if (hasError) return;
+
+        // Build payload
+        const payload = {
+            Items: reservationCart.map(i => ({ ItemID: i.ItemID, Quantity: i.Quantity, VariantID: i.VariantID || null })),
+            StudentName: name,
+            StudentEmail: email,
+            StudentNumber: studentNo
         };
+
+        const btn = document.getElementById('submitReservationBtn');
+        const prevText = btn ? btn.textContent : null;
+        try {
+            if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
+            const resp = await fetch('/api/reservations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const data = await resp.json();
+            if (data && data.success) {
+                // Store reservation code in localStorage to track user's reservations
+                const reservationCode = data.code || data.reservationId;
+                const userReservations = JSON.parse(localStorage.getItem('userReservations') || '[]');
+                userReservations.push({
+                    code: reservationCode,
+                    studentId: studentNo,
+                    createdAt: new Date().toISOString()
+                });
+                localStorage.setItem('userReservations', JSON.stringify(userReservations));
+                
+                alert('Reservation created successfully! Code: ' + reservationCode + '\n\nYou have 10 minutes to cancel this reservation. Check "My Reservations" to manage it.');
+                reservationCart.length = 0;
+                renderCartItems();
+                // close sidebar and modal
+                document.getElementById('reservationCartSidebar')?.classList.remove('open');
+                document.getElementById('cartSidebarOverlay')?.classList.remove('active');
+                const confirmModal = document.getElementById('reservationConfirmModal'); if (confirmModal) confirmModal.style.display = 'none';
+                // clear form
+                if (nameEl) nameEl.value = '';
+                if (emailEl) emailEl.value = '';
+                if (studentEl) studentEl.value = '';
+            } else {
+                document.getElementById('reservationSubmitError').textContent = 'Failed to create reservation.';
+            }
+        } catch (err) {
+            console.error('Create reservation error', err);
+            alert('Error creating reservation. See console for details.');
+        } finally {
+            if (btn) { btn.disabled = false; if (prevText) btn.textContent = prevText; }
+        }
+    });
+
+    function clearReservationErrors() {
+        const els = ['resNameError','resEmailError','resStudentError','reservationSubmitError'];
+        els.forEach(id => { const el = document.getElementById(id); if (el) el.textContent = ''; });
+        // Remove error classes from inputs
+        ['resName', 'resEmail', 'resStudentNumber'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) input.classList.remove('error');
+        });
+    }
+
+    // My Reservations Modal Functionality
+    const myReservationsBtn = document.getElementById('myReservationsBtn');
+    const myReservationsModal = document.getElementById('myReservationsModal');
+    const closeMyReservationsBtn = document.getElementById('closeMyReservationsModal');
+    let timersInterval = null;
+
+    if (myReservationsBtn) {
+        myReservationsBtn.addEventListener('click', () => {
+            if (myReservationsModal) {
+                myReservationsModal.style.display = 'block';
+                fetchMyReservations();
+            }
+        });
+    }
+
+    if (closeMyReservationsBtn) {
+        closeMyReservationsBtn.addEventListener('click', () => {
+            if (myReservationsModal) {
+                myReservationsModal.style.display = 'none';
+                if (timersInterval) {
+                    clearInterval(timersInterval);
+                    timersInterval = null;
+                }
+            }
+        });
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+        if (e.target === myReservationsModal) {
+            myReservationsModal.style.display = 'none';
+            if (timersInterval) {
+                clearInterval(timersInterval);
+                timersInterval = null;
+            }
+        }
+    });
+
+    async function fetchMyReservations() {
+        const container = document.getElementById('myReservationsList');
+        if (!container) return;
+
+        container.innerHTML = '<div class="reservation-spinner"><i class="fas fa-spinner fa-spin"></i> Loading reservations...</div>';
+
+        try {
+            const userReservations = JSON.parse(localStorage.getItem('userReservations') || '[]');
+            if (userReservations.length === 0) {
+                container.innerHTML = '<div class="reservation-empty"><i class="fas fa-inbox"></i><p>No active reservations</p></div>';
+                return;
+            }
+
+            // Fetch reservation details for each code
+            const reservationPromises = userReservations.map(async (res) => {
+                try {
+                    const response = await fetch(`/api/reservations/${res.code}`);
+                    if (!response.ok) return null;
+                    const data = await response.json();
+                    return data;
+                } catch (err) {
+                    console.error('Error fetching reservation:', err);
+                    return null;
+                }
+            });
+
+            const reservations = (await Promise.all(reservationPromises)).filter(r => r !== null && r.Status !== 'Canceled');
+            
+            if (reservations.length === 0) {
+                container.innerHTML = '<div class="reservation-empty"><i class="fas fa-inbox"></i><p>No active reservations</p></div>';
+                return;
+            }
+
+            renderMyReservations(reservations);
+            startTimers();
+        } catch (err) {
+            console.error('Error loading reservations:', err);
+            container.innerHTML = '<div class="reservation-empty"><i class="fas fa-exclamation-circle"></i><p>Error loading reservations</p></div>';
+        }
+    }
+
+    function renderMyReservations(reservations) {
+        const container = document.getElementById('myReservationsList');
+        if (!container) return;
+
+        let html = '';
+        reservations.forEach(reservation => {
+            const cancelExpires = new Date(reservation.CancelWindowExpires);
+            const now = new Date();
+            const remaining = Math.max(0, cancelExpires - now);
+            const canCancel = remaining > 0;
+
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            const timeDisplay = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            const itemsList = reservation.Items ? reservation.Items.map(item => 
+                `<div class="reservation-item-row">
+                    <span>${item.ProductName || 'Product'} ${item.VariantName ? `(${item.VariantName})` : ''}</span>
+                    <span>Qty: ${item.Quantity}</span>
+                </div>`
+            ).join('') : '';
+
+            html += `
+                <div class="reservation-item-card ${canCancel ? 'cancellable' : ''}">
+                    <div class="reservation-header">
+                        <span class="reservation-code">Code: ${reservation.ReservationCode}</span>
+                        <span class="reservation-status status-pending">${reservation.Status || 'Pending'}</span>
+                    </div>
+                    ${canCancel ? `
+                        <div class="cancel-timer">
+                            <i class="fas fa-clock"></i>
+                            <div class="timer-display" data-code="${reservation.ReservationCode}" data-expires="${reservation.CancelWindowExpires}">
+                                ${timeDisplay}
+                            </div>
+                            <small>remaining to cancel</small>
+                        </div>
+                    ` : ''}
+                    <div class="reservation-items-list">
+                        ${itemsList}
+                    </div>
+                    ${canCancel ? `
+                        <button class="cancel-btn-reservation" onclick="cancelReservation('${reservation.ReservationCode}')">
+                            <i class="fas fa-times-circle"></i> Cancel Reservation
+                        </button>
+                    ` : `
+                        <button class="cancel-btn-reservation" disabled>
+                            <i class="fas fa-lock"></i> Cancel Window Expired
+                        </button>
+                    `}
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    function startTimers() {
+        if (timersInterval) clearInterval(timersInterval);
+        
+        timersInterval = setInterval(() => {
+            const timerElements = document.querySelectorAll('.timer-display');
+            let hasActiveTimers = false;
+
+            timerElements.forEach(timer => {
+                const expiresAt = new Date(timer.getAttribute('data-expires'));
+                const now = new Date();
+                const remaining = Math.max(0, expiresAt - now);
+
+                if (remaining > 0) {
+                    hasActiveTimers = true;
+                    const minutes = Math.floor(remaining / 60000);
+                    const seconds = Math.floor((remaining % 60000) / 1000);
+                    timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                } else {
+                    timer.textContent = '00:00';
+                    // Disable cancel button when timer expires
+                    const card = timer.closest('.reservation-item-card');
+                    if (card) {
+                        card.classList.remove('cancellable');
+                        const cancelBtn = card.querySelector('.cancel-btn-reservation');
+                        if (cancelBtn && !cancelBtn.disabled) {
+                            cancelBtn.disabled = true;
+                            cancelBtn.innerHTML = '<i class="fas fa-lock"></i> Cancel Window Expired';
+                        }
+                    }
+                }
+            });
+
+            if (!hasActiveTimers && timersInterval) {
+                clearInterval(timersInterval);
+                timersInterval = null;
+            }
+        }, 1000);
+    }
+
+    async function cancelReservation(reservationCode) {
+        if (!confirm('Are you sure you want to cancel this reservation?')) return;
+
+        try {
+            const response = await fetch(`/api/reservations/${reservationCode}/cancel`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                alert('Reservation canceled successfully');
+                // Remove from localStorage
+                const userReservations = JSON.parse(localStorage.getItem('userReservations') || '[]');
+                const updated = userReservations.filter(r => r.code !== reservationCode);
+                localStorage.setItem('userReservations', JSON.stringify(updated));
+                // Refresh the list
+                fetchMyReservations();
+            } else {
+                alert('Failed to cancel reservation: ' + (data.message || 'Unknown error'));
+            }
+        } catch (err) {
+            console.error('Cancel reservation error:', err);
+            alert('Error canceling reservation. Please try again.');
+        }
+    }
+
+    // Make cancelReservation available globally
+    window.cancelReservation = cancelReservation;
+
+    // Initial render
+    renderProducts(products);
+    // Initialize priceRange display
+    const pr = document.getElementById('priceRange'); if (pr) { document.getElementById('priceValue').textContent = '₱0 - ₱' + Number(pr.value||10000).toFixed(2); }
+    
+    // Mobile filter toggle functionality
+    const filterToggleBtn = document.getElementById('filterToggleBtn');
+    const filterContent = document.querySelector('.sidebar .filter-content');
+    
+    function initMobileFilters() {
+        const isMobile = window.innerWidth <= 1024;
+        
+        if (isMobile) {
+            filterToggleBtn.style.display = 'flex';
+            if (filterContent) {
+                filterContent.classList.remove('open');
+            }
+        } else {
+            filterToggleBtn.style.display = 'none';
+            if (filterContent) {
+                filterContent.classList.add('open');
+            }
+        }
+    }
+    
+    if (filterToggleBtn && filterContent) {
+        filterToggleBtn.addEventListener('click', function() {
+            filterContent.classList.toggle('open');
+            filterToggleBtn.classList.toggle('active');
+        });
+    }
+    
+    // Initialize on load
+    initMobileFilters();
+    
+    // Reinitialize on resize
+    window.addEventListener('resize', initMobileFilters);
+    </script>
+    
+    <!-- Load Flickity library -->
+    <script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
+    
+    <!-- Initialize Flickity carousel after library loads -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const carouselContainer = document.getElementById('carouselItemsContainer');
+        
+        if (carouselContainer && typeof Flickity !== 'undefined') {
+            const flkty = new Flickity(carouselContainer, {
+                cellAlign: 'center',
+                contain: true,
+                wrapAround: true,
+                autoPlay: 5000,
+                prevNextButtons: true,
+                pageDots: true,
+                groupCells: false,
+                selectedAttraction: 0.025,
+                friction: 0.28,
+                freeScroll: false,
+                percentPosition: false
+            });
+        }
+    });
     </script>
 </body>
 </html>
