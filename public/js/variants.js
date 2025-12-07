@@ -5,32 +5,36 @@ let selectedVariantItemId = null;
 
 async function fetchItemsWithVariants() {
   const tbody = document.getElementById('variantItemsTableBody');
-  if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:1.5rem;">Loading items...</td></tr>';
+  const hasTbody = !!tbody;
+  if (hasTbody) {
+    tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:1.5rem;">Loading items...</td></tr>';
+  }
   try {
     const res = await fetch('/api/items-with-variants');
     if (!res.ok) throw new Error('Failed to fetch items');
     const data = await res.json();
     variantItems = Array.isArray(data) ? data : [];
     if (variantItems.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:1.5rem;">No products found.</td></tr>';
+      if (hasTbody) tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:1.5rem;">No products found.</td></tr>';
       return;
     }
-    tbody.innerHTML = variantItems.map(it => `
+    if (hasTbody) {
+      tbody.innerHTML = variantItems.map(it => `
       <tr class="variant-item-row" data-item-id="${it.ItemID}">
         <td>${escapeHtml(it.ItemName)}</td>
         <td>${it.StockQuantity}</td>
       </tr>
     `).join('');
-    document.querySelectorAll('.variant-item-row').forEach(row => {
-      row.addEventListener('click', () => {
-        const id = row.getAttribute('data-item-id');
-        selectVariantItem(parseInt(id, 10));
+      document.querySelectorAll('.variant-item-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const id = row.getAttribute('data-item-id');
+          selectVariantItem(parseInt(id, 10));
+        });
       });
-    });
+    }
   } catch (err) {
     console.error('Error fetching items with variants:', err);
-    tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:1.5rem;">Failed to load products.</td></tr>';
+    if (hasTbody) tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:1.5rem;">Failed to load products.</td></tr>';
   }
 }
 
