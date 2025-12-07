@@ -6,6 +6,11 @@ const superUserAuth = crudController.superUserAuth;
 const adminAuth = crudController.adminAuth;
 const optionalAdminAuth = crudController.optionalAdminAuth;
 
+// Root route - redirect to catalog
+router.get('/', (req, res) => {
+    res.redirect('/GiftstoreCatalog');
+});
+
 // Complete POS purchase (creates purchase and pending payment)
 router.post('/api/purchase/complete', crudController.completePOSPurchase);
 
