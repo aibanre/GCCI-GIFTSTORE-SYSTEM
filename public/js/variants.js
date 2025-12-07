@@ -128,11 +128,14 @@ function initAddVariantForm() {
 
 // Edit Variant Modal
 function openEditVariantModal(variantId) {
+  console.log('[openEditVariantModal] called with variantId=', variantId, 'selectedVariantItemId=', selectedVariantItemId, 'variantItems.length=', variantItems.length, 'fromProductList=', !!window.__variantModalOpenFromProductList);
   const item = variantItems.find(i => i.ItemID === selectedVariantItemId);
   if (!item) return;
   const variant = item.Variants.find(v => v.VariantID === variantId);
+  console.log('[openEditVariantModal] found variant=', !!variant, variant);
   if (!variant) return;
   const modal = document.getElementById('editVariantModal');
+  console.log('[openEditVariantModal] modal element present=', !!modal);
   if (!modal) return;
   modal.style.display = 'block';
   document.getElementById('editVariantID').value = variant.VariantID;
