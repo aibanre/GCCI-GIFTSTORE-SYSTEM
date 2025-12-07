@@ -1,0 +1,48 @@
+{
+  "development": {
+    "username": "root",
+    "password": null,
+    "database": "gcci_giftstore_database",
+    "host": "127.0.0.1",
+    "port": 3306,
+    "dialect": "mysql",
+    "dialectOptions": {
+      "connectTimeout": 60000,
+      "timezone": "+08:00"
+    },
+    "timezone": "+08:00",
+    "pool": {
+      "max": 5,
+      "min": 0,
+      "acquire": 30000,
+      "idle": 10000
+    },
+    "superuserSecret": "12345",
+    "imgbbApiKey": "446b17a5b28da616a35b4db4798db6c2",
+    "aiApiUrl": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+    "aiApiKey": "AIzaSyBYYSSaCO7NeeaGLDJt_cy89zpRvsmkX6A",
+    "aiModel": "gemini-2.0-flash",
+    "email": {
+      "service": "gmail",
+      "user": "gcci.giftstore@gmail.com",
+      "password": "dggapxockfgikmxr",
+      "from": "GCCI Giftstore <gcci.giftstore@gmail.com>"
+    }
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql",
+    "superuserSecret": "12345"
+  },
+  "production": {
+    "username": "root",
+    "password": null,
+    "database": "database_production",
+    "host": "127.0.0.1",
+    "dialect": "mysql",
+    "superuserSecret": "SET_IN_ENV"
+  }
+}

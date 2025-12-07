@@ -1,0 +1,140 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.headerContainer{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 1.25rem 2.5rem;
+    background: linear-gradient(135deg, #2a6b52 0%, #1e4d3a 100%);
+    gap: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    position: relative;
+    z-index: 100;
+    border-bottom: 3px solid #469729;
+}
+
+.sessionBar {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.sessionUser {
+    color: #fff;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logout-btn {
+    background: #469729;
+    color: #fff;
+    border: 2px solid #469729;
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.logout-btn:hover {
+    background: #5ab038;
+    border-color: #5ab038;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.logout-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.brandContainer, .searchContainer, .cartContainer {
+    display: flex;
+    align-items: center;
+}
+
+.brandContainer {
+    flex: 0 0 auto;
+    gap: 1rem;
+    color: #fff;
+}
+
+.logoHolder {
+    width: 56px;
+    height: 56px;
+    flex: 0 0 56px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 0.25rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.logoHolder img{
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.textHolder{
+    color: #fff;
+}
+
+.textHolder h1{
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.searchContainer{
+    flex: 1 1 auto;
+    max-width: 700px;
+}
+
+.searchContainer .searchInput{
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px 0 0 4px;
+    outline: none;
+}
+
+.searchContainer .searchButton{
+    padding: 0.5rem 0.75rem;
+    background-color: #2a6b52;
+    color: #fff;
+    border-left: 0;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cartContainer{
+    flex: 0 0 auto;
+    color: #fff;
+    font-size: 1.25rem;
+    cursor: pointer;
+}

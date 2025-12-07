@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCC Giftstore</title>
+
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/home.css">
+    <link rel="stylesheet" href="/css/catalog.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <div class="headerContainer">
+        <div class="brandContainer">
+            <div class="logoHolder">
+                <!-- Replace the src with your logo file -->
+                <img src="images/image-removebg-preview-removebg-preview.png" alt="GCCI Logo">
+            </div>
+            <div class="textHolder">    
+                <h1>GCCI Giftstore Catalog</h1>
+            </div>
+        </div>
+        
+        <div class="searchContainer">
+            <input class="searchInput" type="search" placeholder="Search products, categories..." aria-label="Search">
+            <button class="searchButton" aria-label="Search button">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+        </div>
+        <div class="cartContainer" role="button" aria-label="Shopping cart">
+            <i class="fa-solid fa-cart-shopping"></i>
+        </div>
+    </div>
+
+    <div class="contentContainer">
+        <!-- Newly Stocked Items Carousel -->
+        <div class="carousel-section">
+            <h2>Newly Stocked Items</h2>
+            <div class="carousel-container" id="newStockCarousel">
+                <button class="carousel-btn left" id="carouselPrev">&#10094;</button>
+                <div class="carousel-items">
+                    <div class="carousel-item active">
+                        <img src="images/sample-product.jpg" alt="New Item 1">
+                        <div class="carousel-caption">
+                            <h4>New Book Set</h4>
+                            <p>₱599.99</p>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <img src="images/sample-product.jpg" alt="New Item 2">
+                        <div class="carousel-caption">
+                            <h4>Uniform (M)</h4>
+                            <p>₱1,299.99</p>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <img src="images/sample-product.jpg" alt="New Item 3">
+                        <div class="carousel-caption">
+                            <h4>Electronics Kit</h4>
+                            <p>₱999.99</p>
+                        </div>
+                    </div>
+                </div>
+                <button class="carousel-btn right" id="carouselNext">&#10095;</button>
+            </div>
+        </div>
+
+        <div class="catalog-container">
+            <!-- Sidebar with filters -->
+            <div class="sidebar">
+                <div class="filter-section">
+                    <h3>Categories</h3>
+                    <div class="filter-options">
+                        
+                        <label><input type="checkbox" name="category" value="electronics"> Books</label>
+                        <label><input type="checkbox" name="category" value="clothing"> Uniform</label>
+                        <label><input type="checkbox" name="category" value="college"> College</label>
+                        <label><input type="checkbox" name="category" value="senior high"> Senior High</label>
+                        <label><input type="checkbox" name="category" value="junior high"> Junior High</label>
+                        <label><input type="checkbox" name="category" value="elementary"> Elementary</label>
+                        <label><input type="checkbox" name="category" value="preschool"> Pre School</label>
+
+
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Price Range</h3>
+                    <div class="filter-options">
+                        <label><input type="range" id="priceRange" min="0" max="1000" step="10"></label>
+                        <span id="priceValue">₱0 - ₱1000</span>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Stock Status</h3>
+                    <div class="filter-options">
+                        <label><input type="checkbox" name="stock" value="in-stock"> In Stock</label>
+                        <label><input type="checkbox" name="stock" value="low-stock"> Low Stock</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Grid -->
+            <div class="product-grid">
+                <!-- Sample Product Card -->
+                <div class="product-card">
+                    <img src="images/sample-product.jpg" alt="Product Name" class="product-image">
+                    <h3 class="product-name">Sample Product</h3>
+                    <p class="product-price">₱999.99</p>
+                    <p class="stock-count">15 in stock</p>
+                    <button class="reserve-btn">Reserve</button>
+                </div>
+                <div class="product-card">
+                    <img src="images/sample-product.jpg" alt="Product Name" class="product-image">
+                    <h3 class="product-name">Sample Product</h3>
+                    <p class="product-price">₱999.99</p>
+                    <p class="stock-count">15 in stock</p>
+                    <button class="reserve-btn">Reserve</button>
+                </div>
+                <div class="product-card">
+                    <img src="images/sample-product.jpg" alt="Product Name" class="product-image">
+                    <h3 class="product-name">Sample Product</h3>
+                    <p class="product-price">₱999.99</p>
+                    <p class="stock-count">15 in stock</p>
+                    <button class="reserve-btn">Reserve</button>
+                </div>
+                <div class="product-card">
+                    <img src="images/sample-product.jpg" alt="Product Name" class="product-image">
+                    <h3 class="product-name">Sample Product</h3>
+                    <p class="product-price">₱999.99</p>
+                    <p class="stock-count">15 in stock</p>
+                    <button class="reserve-btn">Reserve</button>
+                </div>
+                <div class="product-card">
+                    <img src="images/sample-product.jpg" alt="Product Name" class="product-image">
+                    <h3 class="product-name">Sample Product</h3>
+                    <p class="product-price">₱999.99</p>
+                    <p class="stock-count">15 in stock</p>
+                    <button class="reserve-btn">Reserve</button>
+                </div>
+                <div class="product-card">
+                    <img src="images/sample-product.jpg" alt="Product Name" class="product-image">
+                    <h3 class="product-name">Sample Product</h3>
+                    <p class="product-price">₱999.99</p>
+                    <p class="stock-count">15 in stock</p>
+                    <button class="reserve-btn">Reserve</button>
+                </div>
+                
+                <!-- More product cards will be added dynamically -->
+            </div>
+        </div>
+
+        <!-- Product Details Modal -->
+        <div class="product-modal" id="productModal">
+            <div class="modal-content">
+                <img src="" alt="" class="modal-image" id="modalImage">
+                <h2 id="modalTitle"></h2>
+                <p id="modalDescription"></p>
+                <div class="product-options">
+                    <select id="productSize">
+                        <option value="">Select Size</option>
+                    </select>
+                    <select id="productColor">
+                        <option value="">Select Color</option>
+                    </select>
+                </div>
+                <input type="number" min="1" value="1" class="quantity-field" id="quantity">
+                <button class="reserve-btn">Reserve Now</button>
+                <button class="close-modal">Close</button>
+            </div>
+        </div>
+
+        <!-- My Reservations Section -->
+        <div class="reservations-container" style="display: none;">
+            <h2>My Reservations</h2>
+            <table class="reservations-list">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Date Reserved</th>
+                        <th>Quantity</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="reservationsList">
+                    <!-- Reservations will be added dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <style>
+    .carousel-section {
+        margin: 30px 0;
+        text-align: center;
+    }
+    .carousel-container {
+        position: relative;
+        max-width: 600px;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+    .carousel-items {
+        display: flex;
+        transition: transform 0.5s;
+    }
+    .carousel-item {
+        min-width: 100%;
+        box-sizing: border-box;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+    }
+    .carousel-item.active {
+        display: flex;
+    }
+    .carousel-item img {
+        width: 200px;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 10px;
+    }
+    .carousel-caption {
+        margin-top: 10px;
+    }
+    .carousel-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #eee;
+        border: none;
+        font-size: 2rem;
+        padding: 0 10px;
+        cursor: pointer;
+        border-radius: 50%;
+        z-index: 2;
+    }
+    .carousel-btn.left {
+        left: 10px;
+    }
+    .carousel-btn.right {
+        right: 10px;
+    }
+    </style>
+
+    <script>
+        // Show product details modal
+        document.querySelectorAll('.reserve-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                const card = e.target.closest('.product-card');
+                if (card) {
+                    const modal = document.getElementById('productModal');
+                    modal.style.display = 'flex';
+                }
+            });
+        });
+
+        // Close modal
+        document.querySelector('.close-modal').addEventListener('click', function() {
+            document.getElementById('productModal').style.display = 'none';
+        });
+
+        // Price range filter
+        document.getElementById('priceRange').addEventListener('input', function(e) {
+            document.getElementById('priceValue').textContent = `₱0 - ₱${e.target.value}`;
+        });
+
+        // Carousel functionality
+        const carouselItems = document.querySelectorAll('#newStockCarousel .carousel-item');
+        let currentIndex = 0;
+
+        function showCarouselItem(index) {
+            carouselItems.forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+        }
+
+        document.getElementById('carouselPrev').addEventListener('click', () => {
+            currentIndex = (currentIndex - 1 + carouselItems.length) % carouselItems.length;
+            showCarouselItem(currentIndex);
+        });
+
+        document.getElementById('carouselNext').addEventListener('click', () => {
+            currentIndex = (currentIndex + 1) % carouselItems.length;
+            showCarouselItem(currentIndex);
+        });
+
+        // Initialize carousel
+        showCarouselItem(currentIndex);
+    </script>
+</body>
+</html>

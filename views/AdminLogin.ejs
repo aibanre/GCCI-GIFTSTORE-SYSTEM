@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login - GCCI Giftstore</title>
+    <link rel="stylesheet" href="/css/adminlogin.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-left">
+            <div class="branding">
+                <div class="logo-circle">
+                    <img src="/images/image-removebg-preview-removebg-preview.png" alt="GCCI Logo" style="width: 80px; height: 80px; object-fit: contain;">
+                </div>
+                <h1>GCCI Giftstore</h1>
+                <p>Admin Control Panel</p>
+                <div class="features">
+                    <div class="feature-item">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Analytics Dashboard</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-box"></i>
+                        <span>Inventory Management</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-users"></i>
+                        <span>Customer Reservations</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Secure Access</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="login-right">
+            <div class="login-box">
+                <div class="login-header">
+                    <div class="header-icon">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <h2>Welcome Back</h2>
+                    <p>Sign in to access your admin dashboard</p>
+                </div>
+                
+                <% if (error) { %>
+                    <div class="alert alert-error">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span><%= error %></span>
+                    </div>
+                <% } %>
+
+                <form class="login-form" id="loginForm" method="POST" action="/admin/login">
+                    <div class="form-group">
+                        <label for="username">
+                            <i class="fa-solid fa-user"></i>
+                            Username
+                        </label>
+                        <input 
+                            type="text" 
+                            id="username"
+                            class="form-control" 
+                            name="Username" 
+                            placeholder="Enter your username" 
+                            required 
+                            autocomplete="username"
+                        />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">
+                            <i class="fa-solid fa-lock"></i>
+                            Password
+                        </label>
+                        <div class="password-wrapper">
+                            <input 
+                                type="password" 
+                                id="password"
+                                class="form-control" 
+                                name="Password" 
+                                placeholder="Enter your password" 
+                                required 
+                                autocomplete="current-password"
+                            />
+                            <button type="button" class="toggle-password" id="togglePassword">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="login-btn">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        Sign In
+                    </button>
+                </form>
+
+                <div class="login-footer">
+                    <p><i class="fa-solid fa-shield-halved"></i> Secure Login</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password toggle functionality
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                const icon = this.querySelector('i');
+                if (type === 'password') {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                } else {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            });
+        }
+
+        // Form animation on submit
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                const btn = this.querySelector('.login-btn');
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in...';
+                btn.disabled = true;
+            });
+        }
+    </script>
+</body>
+</html>

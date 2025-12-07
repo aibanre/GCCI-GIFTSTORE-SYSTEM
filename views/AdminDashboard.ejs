@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - GCCI Giftstore</title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="/css/common.css" />
+    <link rel="stylesheet" href="/css/header.css" />
+    <link rel="stylesheet" href="/css/dashboard.css" />
+    <link rel="stylesheet" href="/css/pos.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- SheetJS library for Excel export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
+  </head>
+  <body>
+    <!-- Header -->
+    <div class="headerContainer">
+      <div class="brandContainer">
+        <div class="logoHolder">
+          <img src="/images/image-removebg-preview-removebg-preview.png" alt="GCCI Logo" />
+        </div>
+        <div class="textHolder">
+          <h1>GCCI Admin Dashboard</h1>
+        </div>
+      </div>
+      <div class="sessionBar">
+        <% if (adminUser) { %>
+          <span class="sessionUser"><i class="fas fa-user"></i> <%= adminUser.Username %></span>
+          <a href="/admin/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        <% } else { %>
+          <a href="/AdminLogin" class="logout-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Dashboard Container -->
+    <div class="dashboard-container">
+      <!-- Sidebar Navigation -->
+      <div class="admin-sidebar">
+        <ul class="admin-nav">
+          <li>
+            <a href="#" class="active"><i class="fas fa-chart-line"></i> Dashboard</a>
+          </li>
+          <li>
+            <a href="#"><i class="fas fa-cash-register"></i> POS System</a>
+          </li>
+          <li>
+            <a href="#"><i class="fas fa-clipboard-check"></i> Reservations</a>
+          </li>
+          <li>
+            <a href="#" id="pendingPaymentsTabBtn"><i class="fas fa-money-check-alt"></i> Pending Payments</a>
+          </li>
+          <li>
+            <a href="#"><i class="fas fa-box"></i> Inventory</a>
+          </li>
+          <li>
+            <a href="#"><i class="fas fa-chart-bar"></i> Reports</a>
+          </li>
+          
+        </ul>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="main-content">
+        <!-- Dashboard Section -->
+        <div id="dashboardSection">
+          <div style="margin-bottom: 2rem;">
+            <h2 style="font-size: 1.75rem; color: #2c3e50; margin: 0 0 0.5rem 0; font-weight: 600;">Dashboard Overview</h2>
+            <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">Welcome back! Here's what's happening with your store today.</p>
+          </div>
+          <div class="dashboard-stats">
+            <div class="stat-card">
+              <h3><i class="fas fa-box-open" style="margin-right: 0.5rem; color: #3498db;"></i>Total Products</h3>
+              <div class="value"><%= stats.totalProducts || 0 %></div>
+            </div>
+            <div class="stat-card">
+              <h3><i class="fas fa-tags" style="margin-right: 0.5rem; color: #9b59b6;"></i>Total Categories</h3>
+              <div class="value"><%= stats.totalCategories || 0 %></div>
+            </div>
+            <div class="stat-card">
+              <h3><i class="fas fa-exclamation-triangle" style="margin-right: 0.5rem; color: #e74c3c;"></i>Low Stock Items</h3>
+              <div class="value"><%= stats.lowStockItems || 0 %></div>
+            </div>
+            <div class="stat-card">
+              <h3><i class="fas fa-clock" style="margin-right: 0.5rem; color: #f39c12;"></i>Pending Reservations</h3>
+              <div class="value"><%= stats.pendingReservations || 0 %></div>
+            </div>
+            <div class="stat-card">
+              <h3><i class="fas fa-credit-card" style="margin-right: 0.5rem; color: #e67e22;"></i>Pending Payments</h3>
+              <div class="value"><%= stats.pendingPayments || 0 %></div>
+            </div>
+            <div class="stat-card">
+              <h3><i class="fas fa-calendar-day" style="margin-right: 0.5rem; color: #27ae60;"></i>Today Revenue</h3>
+              <div class="value">₱<%= (stats.todayRevenue||0).toFixed(2) %></div>
+            </div>
+            <div class="stat-card">
+              <h3><i class="fas fa-chart-line" style="margin-right: 0.5rem; color: #16a085;"></i>7-Day Revenue</h3>
+              <div class="value">₱<%= (stats.weekRevenue||0).toFixed(2) %></div>
+            </div>
+          </div>
+          <!-- Activity Section with Tabs -->
+          <div style="margin-top: 2rem;">
+            <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+              <!-- Toggle Buttons -->
+              <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; border-bottom: 2px solid #e8ecef; padding-bottom: 0.5rem;">
+                <button class="activity-toggle-btn active" data-view="purchases" style="padding: 0.75rem 1.5rem; background: #2a6b52; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; display: flex; align-items: center; gap: 0.5rem;">
+                  <i class="fas fa-shopping-cart"></i> Recent Purchases
+                </button>
+                <button class="activity-toggle-btn" data-view="transactions" style="padding: 0.75rem 1.5rem; background: #e8ecef; color: #546e7a; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; display: flex; align-items: center; gap: 0.5rem;">
+                  <i class="fas fa-warehouse"></i> Inventory Transactions
+                </button>
+                <button class="activity-toggle-btn" data-view="lowstock" style="padding: 0.75rem 1.5rem; background: #e8ecef; color: #546e7a; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; display: flex; align-items: center; gap: 0.5rem;">
+                  <i class="fas fa-exclamation-triangle"></i> Low Stock Items
+                </button>
+              </div>
+
+              <!-- Recent Purchases View -->
+              <div id="activityView-purchases" class="activity-view">
+                <div class="data-table" style="max-height:400px; overflow:auto;">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Purchase ID</th>
+                        <th>Date & Time</th>
+                        <th>Purchase Type</th>
+                        <th>Total Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    <% if (recentPurchases && recentPurchases.length) { %>
+                      <% recentPurchases.forEach(p => { %>
+                        <tr>
+                          <td><%= p.PurchaseID %></td>
+                          <td><%= new Date(p.DatePurchased).toLocaleString() %></td>
+                          <td><%= p.PurchaseType %></td>
+                          <td style="font-weight: 600; color: #27ae60;">₱<%= Number(p.TotalAmount).toFixed(2) %></td>
+                        </tr>
+                      <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="4" style="text-align:center; padding:2rem; color: #7f8c8d;">No purchases yet.</td></tr>
+                    <% } %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Recent Inventory Transactions View -->
+              <div id="activityView-transactions" class="activity-view" style="display: none;">
+                <div class="data-table" style="max-height:400px; overflow:auto;">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Transaction ID</th>
+                        <th>Date & Time</th>
+                        <th>Item Name</th>
+                        <th>Transaction Type</th>
+                        <th>Quantity Change</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    <% if (recentInventoryTransactions && recentInventoryTransactions.length) { %>
+                      <% recentInventoryTransactions.forEach(t => { %>
+                        <tr>
+                          <td><%= t.TxID %></td>
+                          <td><%= new Date(t.Date).toLocaleString() %></td>
+                          <td><%= t.ItemName %></td>
+                          <td><%= t.Type %></td>
+                          <td class="<%= t.QuantityChange < 0 ? 'qty-neg' : 'qty-pos' %>"><%= t.QuantityChange %></td>
+                        </tr>
+                      <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="5" style="text-align:center; padding:2rem; color: #7f8c8d;">No inventory activity.</td></tr>
+                    <% } %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Low Stock Items View -->
+              <div id="activityView-lowstock" class="activity-view" style="display: none;">
+                <div class="data-table" style="max-height:400px; overflow:auto;">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Item Name</th>
+                        <th>Current Stock</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    <% if (lowStockItemsList && lowStockItemsList.length) { %>
+                      <% lowStockItemsList.forEach(i => { %>
+                        <tr>
+                          <td><%= i.ItemName %></td>
+                          <td class="<%= i.StockQuantity < 5 ? 'stock-low-critical' : 'stock-low' %>" style="font-weight: 600;"><%= i.StockQuantity %></td>
+                          <td>
+                            <% if (i.StockQuantity < 5) { %>
+                              <span style="background: #e74c3c; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">Critical</span>
+                            <% } else { %>
+                              <span style="background: #f39c12; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">Low</span>
+                            <% } %>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="3" style="text-align:center; padding:2rem; color: #7f8c8d;">No low stock items.</td></tr>
+                    <% } %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Payments Section -->
+        <div class="form-container hidden" id="pendingPaymentsSection">
+          <div style="margin-bottom: 2rem;">
+            <h2 style="font-size: 1.75rem; color: #2c3e50; margin: 0 0 0.5rem 0; font-weight: 600;"><i class="fas fa-credit-card" style="margin-right: 0.75rem; color: #2a6b52;"></i>Pending Payments</h2>
+            <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">Manage and verify student payment confirmations</p>
+          </div>
+          
+          <div style="background: white; padding: 1.75rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+              <div style="display: flex; gap: 0.75rem; flex: 1; max-width: 500px;">
+                <input type="text" id="pendingPaymentsSearch" class="form-control" placeholder="🔍 Search by Payment Ref, Purchase ID, Student..." style="flex: 1; padding: 0.75rem 1rem; border: 2px solid #e8ecef; border-radius: 8px; font-size: 0.95rem;" />
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-primary" id="refreshPendingPayments" style="padding: 0.75rem 1.25rem; border-radius: 8px; display: flex; align-items: center; gap: 0.5rem; background: #2a6b52; border: none; font-weight: 600;">
+                  <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <span id="pendingPaymentsCount" style="padding: 0.75rem 1rem; background: #e67e22; color: white; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                  <i class="fas fa-clock"></i> 0 pending
+                </span>
+              </div>
+            </div>
+            
+            <div class="data-table" style="max-height: 600px; overflow: auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Payment ID</th>
+                    <th>Purchase ID</th>
+                    <th>Payment Reference</th>
+                    <th>Amount Paid</th>
+                    <th>Payment Date</th>
+                    <th>Purchase Type</th>
+                    <th>Student</th>
+                    <th style="text-align: center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="pendingPaymentsTableBody">
+                  <tr>
+                    <td colspan="8" style="text-align: center; padding: 2rem; color: #7f8c8d;">Loading pending payments...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Payment Details Modal -->
+          <div id="paymentDetailsModal" class="modal" style="display:none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+            <div class="modal-content" style="background-color: #fff; margin: 5% auto; padding: 0; border-radius: 12px; max-width: 600px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); animation: slideDown 0.3s ease;">
+              <div class="modal-header" style="background: linear-gradient(135deg, #2a6b52 0%, #1e4d3a 100%); color: white; padding: 1.5rem; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-file-invoice-dollar"></i> <span id="modalPaymentTitle">Payment Details</span></h3>
+                <button class="close-modal" id="closePaymentDetailsModal" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.5rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s;">&times;</button>
+              </div>
+              <div class="modal-body" style="padding: 2rem; max-height: 60vh; overflow-y: auto;">
+                <div id="modalPaymentInfo"></div>
+                <div id="modalPaymentItems"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inventory Management Section -->
+        <div class="form-container hidden" id="inventorySection">
+          <div style="margin-bottom: 2rem;">
+            <h2 style="font-size: 1.75rem; color: #2c3e50; margin: 0 0 0.5rem 0; font-weight: 600;"><i class="fas fa-box" style="margin-right: 0.75rem; color: #2a6b52;"></i>Inventory Management</h2>
+            <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">Manage your products, categories, and inventory levels</p>
+          </div>
+          <div class="tab-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+              <div class="tab-buttons" style="margin-bottom: 0;">
+                <button class="tab-btn active" id="productListTabBtn"><i class="fas fa-list" style="margin-right: 0.5rem;"></i>Product List</button>
+                <button class="tab-btn" id="batchUploadTabBtn"><i class="fas fa-file-csv" style="margin-right: 0.5rem;"></i>Batch Upload</button>
+                <button class="tab-btn" id="addProductTabBtn"><i class="fas fa-plus-circle" style="margin-right: 0.5rem;"></i>Add Product</button>
+                <button class="tab-btn" id="categoriesTabBtn"><i class="fas fa-tags" style="margin-right: 0.5rem;"></i>Categories</button>
+                <button class="tab-btn" id="variantsTabBtn"><i class="fas fa-th" style="margin-right: 0.5rem;"></i>Variants</button>
+              </div>
+            </div>
+
+            <!-- Product List Tab -->
+            <div class="tab-content active" id="productListTab">
+              <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                  <h3 style="margin: 0; color: #2c3e50; font-size: 1.15rem; font-weight: 600;">Product Inventory</h3>
+                  <span id="productCount" style="color: #7f8c8d; font-size: 0.9rem;">0 products</span>
+                </div>
+              <div class="data-table" style="max-height: 500px; overflow: auto;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Product Name</th>
+                      <th>Category</th>
+                      <th>Price</th>
+                      <th>Stock</th>
+                      <th>Variants</th>
+                      <th style="text-align: center;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="productsTableBody">
+                    <tr>
+                      <td colspan="6" style="text-align: center; padding: 2rem; color: #7f8c8d;">Loading products...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              </div>
+            </div>
+
+            <!-- Batch Upload Tab -->
+            <div class="tab-content" id="batchUploadTab">
+              <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); max-width: 800px;">
+                <h3 style="margin: 0 0 1.5rem 0; color: #2c3e50; font-size: 1.15rem; font-weight: 600;">
+                  <i class="fas fa-file-upload" style="margin-right: 0.5rem; color: #2a6b52;"></i>Batch Upload Products via CSV
+                </h3>
+                
+                <!-- Instructions -->
+                <div style="background: #e8f5e9; border-left: 4px solid #2a6b52; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                  <h4 style="margin: 0 0 0.75rem 0; color: #1e4d3a; font-size: 1rem; font-weight: 600;">
+                    <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>Instructions
+                  </h4>
+                  <ol style="margin: 0; padding-left: 1.5rem; color: #2c3e50; line-height: 1.6;">
+                    <li>Download the CSV template below</li>
+                    <li>Fill in your product data (ItemName, CategoryID, Price, StockQuantity, Description, ImagePath, Variants)</li>
+                    <li>For Variants, use format: Size:Price:Stock|Size:Price:Stock (e.g., S:99.00:20|M:105.00:15|L:110.00:10)</li>
+                    <li>Save the file and upload it using the form below</li>
+                    <li>Review the validation results and confirm the upload</li>
+                  </ol>
+                  <div style="margin-top: 1rem;">
+                    <button type="button" id="downloadTemplateBtn" style="background: #2a6b52; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">
+                      <i class="fas fa-download" style="margin-right: 0.5rem;"></i>Download CSV Template
+                    </button>
+                  </div>
+                </div>
+
+                <!-- CSV Upload Form -->
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
+                  <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.75rem; display: block;">
+                    <i class="fas fa-file-csv" style="margin-right: 0.5rem;"></i>Select CSV File
+                  </label>
+                  <input type="file" id="csvFileInput" accept=".csv" style="width: 100%; padding: 0.75rem; border: 2px dashed #cbd5e0; border-radius: 8px; background: white; cursor: pointer;" />
+                  <p style="margin: 0.5rem 0 0 0; color: #7f8c8d; font-size: 0.85rem;">
+                    <i class="fas fa-exclamation-circle" style="margin-right: 0.3rem;"></i>Accepted format: .csv files only
+                  </p>
+                </div>
+
+                <!-- Preview Section -->
+                <div id="csvPreviewSection" style="display: none; margin-bottom: 1.5rem;">
+                  <h4 style="margin: 0 0 1rem 0; color: #2c3e50; font-size: 1rem; font-weight: 600;">
+                    <i class="fas fa-eye" style="margin-right: 0.5rem; color: #2a6b52;"></i>Preview (<span id="csvRowCount">0</span> products)
+                  </h4>
+                  <div style="max-height: 300px; overflow: auto; border: 1px solid #e0e0e0; border-radius: 8px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                      <thead style="background: #f5f5f5; position: sticky; top: 0;">
+                        <tr>
+                          <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd; font-weight: 600;">#</th>
+                          <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd; font-weight: 600;">Product Name</th>
+                          <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd; font-weight: 600;">Category</th>
+                          <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd; font-weight: 600;">Price</th>
+                          <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd; font-weight: 600;">Stock</th>
+                          <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd; font-weight: 600;">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody id="csvPreviewTableBody">
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Validation Messages -->
+                <div id="csvValidationMessages" style="display: none; margin-bottom: 1.5rem;"></div>
+
+                <!-- Upload Actions -->
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                  <button type="button" id="cancelCsvUploadBtn" style="background: #e0e0e0; color: #546e7a; border: none; padding: 0.7rem 1.5rem; border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 500; display: none;">
+                    <i class="fas fa-times" style="margin-right: 0.5rem;"></i>Cancel
+                  </button>
+                  <button type="button" id="uploadCsvBtn" style="background: linear-gradient(135deg, #2a6b52 0%, #1e4d3a 100%); color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 500; display: none; transition: all 0.2s;">
+                    <i class="fas fa-upload" style="margin-right: 0.5rem;"></i>Upload Products
+                  </button>
+                </div>
+
+                <!-- Progress Bar -->
+                <div id="csvUploadProgress" style="display: none; margin-top: 1.5rem;">
+                  <div style="background: #e0e0e0; border-radius: 10px; height: 8px; overflow: hidden;">
+                    <div id="csvProgressBar" style="background: linear-gradient(90deg, #2a6b52, #27ae60); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                  </div>
+                  <p id="csvProgressText" style="margin: 0.5rem 0 0 0; color: #546e7a; font-size: 0.9rem; text-align: center;">Uploading...</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Add New Product Tab -->
+            <div class="tab-content" id="addProductTab">
+              <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); max-width: 700px;">
+                <h3 style="margin: 0 0 1.5rem 0; color: #2c3e50; font-size: 1.15rem; font-weight: 600;"><i class="fas fa-box-open" style="margin-right: 0.5rem; color: #2a6b52;"></i>Add New Product</h3>
+              <form class="product-form" id="addProductForm" method="post" action="/api/products" enctype="multipart/form-data" data-ajax="true" style="background: transparent; padding: 0;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                  <div class="form-group">
+                    <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">Product Name <span style="color: #e74c3c;">*</span></label>
+                    <input type="text" class="form-control" id="productName" placeholder="Enter product name" required />
+                  </div>
+                  <div class="form-group">
+                    <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">Category <span style="color: #e74c3c;">*</span></label>
+                    <select class="form-control" id="productCategory" required>
+                      <option value="">Select a category</option>
+                      <option>Books</option>
+                      <option>Uniform</option>
+                      <option>College</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">Price <span style="color: #e74c3c;">*</span></label>
+                    <input type="number" class="form-control" id="productPrice" placeholder="0.00" step="0.01" required />
+                  </div>
+                  <div class="form-group">
+                    <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">Stock Quantity <span style="color: #e74c3c;">*</span></label>
+                    <input type="number" class="form-control" id="productStock" placeholder="0" required />
+                  </div>
+                </div>
+                <div class="form-group" style="margin-top: 1.5rem;">
+                  <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">Description</label>
+                  <textarea id="productDescription" class="form-control" placeholder="Enter product description (optional)" rows="4"></textarea>
+                </div>
+                <div class="form-group" style="display:flex; align-items:center; gap:0.75rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                  <input type="checkbox" id="hasVariantsCheckbox" style="width: 18px; height: 18px; cursor: pointer;" />
+                  <label for="hasVariantsCheckbox" style="margin: 0; cursor: pointer; font-weight: 500; color: #2c3e50;">This product has variants (sizes, colors, etc.)</label>
+                </div>
+                <div class="form-group">
+                  <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">Product Image</label>
+                  <div class="image-upload-section">
+                    <input type="file" id="productImageInput" class="form-control hidden" accept="image/*" />
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('productImageInput').click()" style="display: flex; align-items: center; gap: 0.5rem;">
+                      <i class="fas fa-image"></i> Choose Image
+                    </button>
+                    <div id="imagePreview" style="margin-top: 1rem;"></div>
+                  </div>
+                </div>
+                <div class="form-actions" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #e8ecef;">
+                  <button type="submit" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem;"><i class="fas fa-plus-circle"></i> Add Product</button>
+                  <button type="reset" class="btn btn-secondary" style="padding: 0.75rem 1.5rem;">Clear Form</button>
+                </div>
+              </form>
+              </div>
+            </div>
+
+            <!-- Categories Tab -->
+            <div class="tab-content" id="categoriesTab">
+              <div class="category-management">
+                <h4>Add New Category</h4>
+
+                <div class="category-form-section">
+                  <form class="category-form" id="addCategoryForm" method="post" action="/api/categories">
+                    <div class="form-group">
+                      <label>Category Name:</label>
+                      <input type="text" name="CategoryName" id="categoryName" class="form-control" placeholder="Enter category name" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                      Add Category
+                    </button>
+                  </form>
+                </div>
+
+                <div class="categories-list-section">
+                  <h4>Active Categories</h4>
+                  <div class="data-table">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Category Name</th>
+                          <th>Category ID</th>
+                          <th>Items Count</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="categoriesTableBody">
+                        <tr>
+                          <td colspan="4" style="text-align: center; padding: 2rem;">Loading categories...</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Variants Tab -->
+            <div class="tab-content" id="variantsTab">
+              <div class="variant-management">
+                <h4>Manage Variants</h4>
+                <div class="variant-layout" style="display:flex; gap:1.5rem; align-items:stretch; flex-wrap:wrap;">
+                  <!-- Items List -->
+                  <div class="variant-items" style="flex:1 1 280px; min-width:260px;">
+                    <h5>Products</h5>
+                    <div class="data-table" style="max-height:400px; overflow:auto;">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Product</th>
+                            <th>Base Stock</th>
+                          </tr>
+                        </thead>
+                        <tbody id="variantItemsTableBody">
+                          <tr><td colspan="2" style="text-align:center; padding:1.5rem;">Loading items...</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <!-- Variants for Selected Item -->
+                  <div class="variant-details" style="flex:2 1 460px; min-width:340px;">
+                    <h5 id="selectedVariantItemTitle">Select a product to view variants</h5>
+                    <div class="data-table" style="max-height:300px; overflow:auto;">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Size</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Active</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody id="itemVariantsTableBody">
+                          <tr><td colspan="6" style="text-align:center; padding:1.5rem;">No item selected.</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="variant-add-form" style="margin-top:1rem;">
+                      <h5>Add Variant</h5>
+                      <form id="addVariantForm">
+                        <div style="display:flex; flex-wrap:wrap; gap:0.75rem;">
+                          <input type="text" class="form-control" id="variantSize" placeholder="Size (e.g. S, M, L)" style="flex:1 1 120px;" required />
+                          <input type="text" class="form-control" id="variantSKU" placeholder="SKU (optional)" style="flex:1 1 140px;" />
+                          <input type="number" step="0.01" class="form-control" id="variantPrice" placeholder="Price override (optional)" style="flex:1 1 150px;" />
+                          <input type="number" class="form-control" id="variantStock" placeholder="Stock" style="flex:1 1 100px;" required />
+                        </div>
+                        <div class="form-actions" style="margin-top:0.75rem;">
+                          <button type="submit" class="btn btn-primary" id="addVariantBtn" disabled>Add Variant</button>
+                          <button type="button" class="btn btn-secondary" id="clearVariantForm">Clear</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Edit Variant Modal -->
+              <div id="editVariantModal" class="modal-centered" style="display:none;">
+                <div class="modal-content-custom" id="editVariantContent">
+                  <span class="close-modal" id="closeEditVariantModal">&times;</span>
+                  <h3>Edit Variant</h3>
+                  <form id="editVariantForm">
+                    <input type="hidden" id="editVariantID" />
+                    <div class="form-group">
+                      <label>Size:</label>
+                      <input type="text" id="editVariantSize" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                      <label>Price Override:</label>
+                      <input type="number" step="0.01" id="editVariantPrice" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                      <label>Stock Quantity:</label>
+                      <input type="number" id="editVariantStock" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                      <label>Active:</label>
+                      <select id="editVariantActive" class="form-control">
+                        <option value="1">Yes</option>
+                        <option value="0">No</option>
+                      </select>
+                    </div>
+                    <div class="form-actions">
+                      <button type="submit" class="btn btn-primary">Save Changes</button>
+                      <button type="button" class="btn btn-secondary" id="cancelEditVariant">Cancel</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reservations Section -->
+        <div class="form-container hidden" id="reservationsSection">
+          <div style="margin-bottom: 2rem;">
+            <h2 style="font-size: 1.75rem; color: #2c3e50; margin: 0 0 0.5rem 0; font-weight: 600;">
+              <i class="fas fa-clock-rotate-left" style="margin-right: 0.75rem; color: #2a6b52;"></i>Manage Reservations
+            </h2>
+            <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">Track and manage customer reservations</p>
+          </div>
+
+          <!-- Filters and Search -->
+          <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 1; min-width: 250px;">
+              <input 
+                type="text" 
+                id="reservationSearchInput" 
+                placeholder="Search by code, student name, or email..." 
+                style="width: 100%; padding: 0.65rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem;"
+              />
+            </div>
+            <div>
+              <select id="reservationStatusFilter" style="padding: 0.65rem 2rem 0.65rem 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; background: white;">
+                <option value="">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Claimed">Claimed</option>
+                <option value="Expired">Expired</option>
+                <option value="Canceled">Canceled</option>
+              </select>
+            </div>
+            <div>
+              <button class="btn btn-secondary" id="refreshReservationsBtn" style="padding: 0.65rem 1.25rem;">
+                <i class="fas fa-sync-alt"></i> Refresh
+              </button>
+            </div>
+          </div>
+
+          <!-- Stats Cards -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.25rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.25rem;">Total Reservations</div>
+              <div style="font-size: 2rem; font-weight: bold;" id="totalReservationsCount">0</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 1.25rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.25rem;">Pending</div>
+              <div style="font-size: 2rem; font-weight: bold;" id="pendingReservationsCount">0</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 1.25rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.25rem;">Ready to Claim</div>
+              <div style="font-size: 2rem; font-weight: bold;" id="approvedReservationsCount">0</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 1.25rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.25rem;">Claimed</div>
+              <div style="font-size: 2rem; font-weight: bold;" id="claimedReservationsCount">0</div>
+            </div>
+          </div>
+
+          <div class="data-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Reservation Code</th>
+                  <th>Student</th>
+                  <th>Items</th>
+                  <th>Date Reserved</th>
+                  <th>Cancel Window</th>
+                  <th>Claim Deadline</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="reservationsTableBody">
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 2rem;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem; color: #2a6b52;"></i>
+                    <p style="margin-top: 0.5rem; color: #666;">Loading reservations...</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Reservation Details Modal -->
+        <div id="reservationDetailsModal" class="modal" style="display:none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+          <div class="modal-content" style="background-color: #fff; margin: 5% auto; padding: 0; border-radius: 12px; max-width: 700px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); animation: slideDown 0.3s ease;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #2a6b52 0%, #1e4d3a 100%); color: white; padding: 1.5rem; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+              <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-clipboard-list"></i> <span id="reservationModalTitle">Reservation Details</span></h3>
+              <button class="close-modal" id="closeReservationDetailsModal" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.5rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 2rem; max-height: 60vh; overflow-y: auto;">
+            
+              <!-- Reservation Info -->
+              <div id="reservationMeta" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                <!-- Populated by JS -->
+              </div>
+
+              <!-- Items Table -->
+              <h4 style="margin-bottom: 1rem; color: #2c3e50; font-size: 1rem; font-weight: 600;">Reserved Items</h4>
+              <div class="data-table" style="max-height: 300px; overflow: auto; margin-bottom: 1.5rem;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                  </tr>
+                </thead>
+                <tbody id="reservationItemsBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+
+              <!-- Actions -->
+              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid #ddd;">
+                <button class="btn btn-primary" id="reservationProceedPayment" style="flex: 1;">
+                  <i class="fas fa-money-bill-wave"></i> Proceed to Payment
+                </button>
+                <button class="btn" id="reservationMarkCancelled" style="flex: 1; background: #dc3545; color: white;">
+                  <i class="fas fa-times-circle"></i> Cancel Reservation
+                </button>
+                <button class="btn btn-secondary" id="closeReservationDetailsBtn" style="flex: 1;">
+                  <i class="fas fa-arrow-left"></i> Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reports Section -->
+        <div class="form-container hidden" id="reportsSection">
+          <div style="margin-bottom: 2rem;">
+            <h2 style="font-size: 1.75rem; color: #2c3e50; margin: 0 0 0.5rem 0; font-weight: 600;"><i class="fas fa-chart-bar" style="margin-right: 0.75rem; color: #2a6b52;"></i>Reports & Analytics</h2>
+            <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">Generate comprehensive reports and AI-powered stock analysis</p>
+          </div>
+
+          <!-- Report Controls Card -->
+          <div style="background: white; padding: 1.75rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 1.5rem;">
+            <h3 style="margin: 0 0 1.25rem 0; color: #2c3e50; font-size: 1.1rem; font-weight: 600; display: flex; align-items: center;">
+              <i class="fas fa-filter" style="margin-right: 0.5rem; color: #2a6b52;"></i>
+              Report Configuration
+            </h3>
+            <div class="report-filters" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto auto; gap: 1rem; align-items: center;">
+              <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: #546e7a; font-weight: 500; font-size: 0.9rem;">Report Type</label>
+                <select id="reportTypeSelect" class="form-control" style="padding: 0.75rem 1rem; border: 2px solid #e8ecef; border-radius: 8px; font-size: 0.95rem; width: 100%;">
+                  <option value="stock">📦 Stock Report</option>
+                  <option value="sales">💰 Sales Report</option>
+                </select>
+              </div>
+              <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: #546e7a; font-weight: 500; font-size: 0.9rem;">From Date</label>
+                <input id="reportFrom" type="date" class="form-control" style="padding: 0.75rem 1rem; border: 2px solid #e8ecef; border-radius: 8px; font-size: 0.95rem; width: 100%;" />
+              </div>
+              <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: #546e7a; font-weight: 500; font-size: 0.9rem;">To Date</label>
+                <input id="reportTo" type="date" class="form-control" style="padding: 0.75rem 1rem; border: 2px solid #e8ecef; border-radius: 8px; font-size: 0.95rem; width: 100%;" />
+              </div>
+              <button id="generateReportBtn" class="btn btn-primary" style="margin-top: 1.65rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #2a6b52 0%, #1e4d3a 100%); color: white; border: none; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.3s ease;">
+                <i class="fas fa-chart-line"></i>
+                Generate Report
+              </button>
+              <button id="generateAiStockReportBtn" class="btn btn-secondary" style="margin-top: 1.65rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; border: none; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.3s ease;">
+                <i class="fas fa-brain"></i>
+                AI Stock Analysis
+              </button>
+            </div>
+          </div>
+
+          <!-- Report Output Area -->
+          <div class="report-chart">
+            <!-- Standard Report Output -->
+            <div id="standardReportOutput" style="display:none;"></div>
+            
+            <!-- AI Report Raw Output -->
+            <div id="aiReportOutput" style="white-space:pre-wrap; font-family:monospace; background:#fff; padding:1.5rem; border-radius:12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-top:0; display:none; max-height: 400px; overflow-y: auto;"></div>
+            
+            <!-- AI Suggestions Container -->
+            <div id="aiSuggestionsContainer" style="display:none;">
+              <div style="background: white; padding: 1.75rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                  <h3 style="margin: 0; color: #2c3e50; font-size: 1.1rem; font-weight: 600; display: flex; align-items: center;">
+                    <i class="fas fa-lightbulb" style="margin-right: 0.5rem; color: #f39c12;"></i>
+                    AI-Suggested Orders
+                  </h3>
+                  <div style="display:flex; gap:0.75rem;">
+                    <button id="refreshAiHistoryBtn" class="btn btn-secondary" style="padding: 0.5rem 1rem; background: #95a5a6; color: white; border: none; border-radius: 6px; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
+                      <i class="fas fa-sync-alt"></i>
+                      Refresh
+                    </button>
+                    <button id="exportAiCsvBtn" class="btn btn-primary" style="padding: 0.5rem 1rem; background: #27ae60; color: white; border: none; border-radius: 6px; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
+                      <i class="fas fa-file-excel"></i>
+                      Export CSV
+                    </button>
+                  </div>
+                </div>
+                <div class="data-table" style="overflow-x: auto;">
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                      <tr style="background: #f8f9fa; border-bottom: 2px solid #e8ecef;">
+                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #546e7a; font-size: 0.9rem;">Item ID</th>
+                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #546e7a; font-size: 0.9rem;">Item Name</th>
+                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #546e7a; font-size: 0.9rem;">Reason</th>
+                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #546e7a; font-size: 0.9rem;">Suggested Qty</th>
+                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #546e7a; font-size: 0.9rem;">Priority</th>
+                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #546e7a; font-size: 0.9rem;">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="aiSuggestionsBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- POS System Section -->
+        <div class="form-container hidden" id="posSystemSection">
+          <div style="margin-bottom: 2rem;">
+            <h2 style="font-size: 1.75rem; color: #2c3e50; margin: 0 0 0.5rem 0; font-weight: 600;"><i class="fas fa-cash-register" style="margin-right: 0.75rem; color: #2a6b52;"></i>Point of Sale System</h2>
+            <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">Process sales transactions quickly and efficiently</p>
+          </div>
+
+          <div class="pos-container">
+            <!-- Product Selection Panel -->
+            <div class="pos-products-panel">
+              <h3 style="margin: 0 0 1.25rem 0; color: #2c3e50; font-size: 1.15rem; font-weight: 600; display: flex; align-items: center;">
+                <i class="fas fa-shopping-bag" style="margin-right: 0.5rem; color: #2a6b52;"></i>
+                Available Products
+              </h3>
+              <div class="product-search-bar" style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem;">
+                <input type="text" id="posProductSearch" class="form-control" placeholder="🔍 Search products..." style="flex: 1; padding: 0.75rem 1rem; border: 2px solid #e8ecef; border-radius: 8px; font-size: 0.95rem;" />
+                <select id="posCategoryFilter" class="form-control" style="padding: 0.75rem 1rem; border: 2px solid #e8ecef; border-radius: 8px; font-size: 0.95rem; min-width: 150px;">
+                  <option value="">All Categories</option>
+                  <option value="books">Books</option>
+                  <option value="uniform">Uniform</option>
+                  <option value="college">College</option>
+                  <option value="senior-high">Senior High</option>
+                  <option value="electronics">Electronics</option>
+                </select>
+              </div>
+              <div class="pos-products-list" id="posProductsList" style="max-height: 550px; overflow-y: auto;">
+                <!-- Products loaded from API -->
+              </div>
+            </div>
+
+            <!-- Transaction Panel -->
+            <div class="pos-transaction-panel">
+              <div style="background: white; padding: 1.75rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <h3 style="margin: 0 0 1.25rem 0; color: #2c3e50; font-size: 1.15rem; font-weight: 600; display: flex; align-items: center;">
+                  <i class="fas fa-shopping-cart" style="margin-right: 0.5rem; color: #2a6b52;"></i>
+                  Current Transaction
+                </h3>
+
+                <!-- Cart Section -->
+                <div class="pos-cart-section" style="margin-bottom: 1.5rem;">
+                  <h4 style="margin: 0 0 1rem 0; color: #546e7a; font-size: 0.95rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Cart Items</h4>
+                  <div class="pos-cart-items" id="posCartItems" style="max-height: 300px; overflow-y: auto; padding: 0.5rem; background: #f8f9fa; border-radius: 8px; min-height: 100px;">
+                    <p class="empty-cart" style="text-align: center; color: #7f8c8d; padding: 2rem; margin: 0;"><i class="fas fa-shopping-cart" style="font-size: 2rem; opacity: 0.3; display: block; margin-bottom: 0.5rem;"></i>Cart is empty</p>
+                  </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="pos-summary" style="padding: 1.25rem; background: linear-gradient(135deg, #f8f9fa 0%, #e8ecef 100%); border-radius: 8px; margin-bottom: 1.5rem;">
+                  <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 0.95rem; color: #546e7a;">
+                    <span>Subtotal:</span>
+                    <strong id="posSubtotal" style="color: #2c3e50; font-size: 1rem;">₱0.00</strong>
+                  </div>
+                  <div class="summary-row summary-total" style="display: flex; justify-content: space-between; padding-top: 0.75rem; border-top: 2px solid #ddd; font-size: 1.1rem;">
+                    <span style="font-weight: 600; color: #2c3e50;">Total:</span>
+                    <strong id="posTotalAmount" style="color: #27ae60; font-size: 1.5rem;">₱0.00</strong>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pos-actions" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                  <button class="btn btn-success btn-block" id="posCompleteTransaction" style="padding: 1rem; font-size: 1rem; font-weight: 600; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: #27ae60; border: none; box-shadow: 0 4px 8px rgba(39,174,96,0.3);">
+                    <i class="fas fa-check-circle"></i> Complete Purchase
+                  </button>
+                  <button class="btn btn-danger btn-block" id="posClearCart" style="padding: 0.75rem; font-size: 0.95rem; font-weight: 600; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: #e74c3c; border: none;">
+                    <i class="fas fa-trash-alt"></i> Clear Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Purchase Slip Modal -->
+          <div id="purchaseSlipModal" class="modal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+            <div class="modal-content" style="background-color: #fff; margin: 5% auto; padding: 0; border-radius: 12px; max-width: 500px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); animation: slideDown 0.3s ease;">
+              <div class="modal-header" style="background: linear-gradient(135deg, #2a6b52 0%, #1e4d3a 100%); color: white; padding: 1.5rem; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-receipt"></i> Purchase Slip</h3>
+                <button class="close-modal" id="closePurchaseSlip" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.5rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s;">&times;</button>
+              </div>
+              <div class="modal-body" style="padding: 2rem; max-height: 60vh; overflow-y: auto;">
+                <div id="receiptContent"></div>
+              </div>
+              <div class="modal-footer" style="padding: 1.25rem; background: #f8f9fa; border-radius: 0 0 12px 12px; display: flex; gap: 0.75rem;">
+                <button class="btn btn-primary" onclick="window.print()" style="flex: 1; padding: 0.75rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: #3498db; border: none; color: white; font-weight: 600;">
+                  <i class="fas fa-print"></i> Print Slip
+                </button>
+                <button class="btn btn-success" id="posNewTransaction" style="flex: 1; padding: 0.75rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: #27ae60; border: none; color: white; font-weight: 600;">
+                  <i class="fas fa-plus-circle"></i> New Transaction
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/dashboard.js"></script>
+    <script src="/js/pendingPayments.js"></script>
+    <script src="/js/tabs.js"></script>
+    <script src="/js/stats.js"></script>
+    <script src="/js/categories.js"></script>
+    <script src="/js/inventory.js"></script>
+    <script src="/js/variants.js"></script>
+    <script src="/js/pos.js"></script>
+  </body>
+</html>

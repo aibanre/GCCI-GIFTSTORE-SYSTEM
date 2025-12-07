@@ -1,0 +1,304 @@
+================================================================================
+GCCI GIFTSTORE SYSTEM - TECHNICAL SPECIFICATIONS
+================================================================================
+
+PROJECT INFORMATION
+-------------------
+Project Name: GCCI Giftstore System
+Version: 1.0.0
+Repository: https://github.com/aibanre/GCCI-GIFTSTORE-SYSTEM
+Branch: server_and_database
+License: ISC
+
+
+RUNTIME ENVIRONMENT
+-------------------
+Platform: Node.js
+Server Port: 3000
+
+
+BACKEND TECHNOLOGIES
+--------------------
+Language: JavaScript (Node.js)
+Web Framework: Express.js v5.1.0
+
+Database:
+  - Database System: MySQL
+  - ORM: Sequelize v6.37.7
+  - Database Name: gcci_giftstore_database
+  - Host: localhost
+  - Database Driver: mysql2 v3.15.3
+  - CLI Tool: sequelize-cli v6.6.3
+
+Authentication & Security:
+  - Password Hashing: bcrypt v5.1.1
+  - Session Management: cookie-parser v1.4.7
+  - Google Authentication: google-auth-library v8.9.0
+
+File Processing:
+  - Excel/CSV Processing: xlsx v0.18.5
+
+Development Tools:
+  - Process Manager: nodemon v3.1.11
+
+
+FRONTEND TECHNOLOGIES
+---------------------
+Template Engine: EJS (Embedded JavaScript) v3.1.10
+
+CSS Framework: Custom CSS (No external framework)
+  - Custom stylesheets for each module
+  - Responsive design with media queries
+  - Modern CSS features (Grid, Flexbox, Gradients, Animations)
+
+UI Components & Icons:
+  - Font Awesome v7.0.1 (CDN)
+  - Custom icon integration
+
+JavaScript:
+  - Vanilla JavaScript (ES6+)
+  - No frontend framework (React, Vue, Angular)
+  - Client-side form validation
+  - Dynamic DOM manipulation
+  - Event-driven programming
+
+Key Frontend Features:
+  - Responsive design (desktop, tablet, mobile)
+  - Modal dialogs
+  - Sidebar navigation
+  - Interactive product carousel
+  - Real-time cart management
+  - Form validation
+  - Dynamic product filtering
+  - AJAX requests for API calls
+
+
+ARTIFICIAL INTELLIGENCE INTEGRATION
+------------------------------------
+AI Provider: Google Gemini AI
+API Endpoint: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+Model: gemini-2.0-flash
+Configuration: Environment variables (AI_API_URL, AI_API_KEY)
+
+AI Features:
+  1. Dynamic Product Carousel Recommendations
+     - Analyzes product inventory
+     - Generates contextual product showcases
+     - Multiple recommendation strategies (new stock, trending, low stock, seasonal)
+     - Response format: JSON with title and product recommendations
+  
+  2. AI Analysis Logging
+     - Tracks all AI requests and responses
+     - Stores prompts, responses, and metadata
+     - Provider tracking (Gemini)
+     - Performance monitoring
+
+AI Implementation Details:
+  - Server-side API key management (secure)
+  - Configurable via environment variables or config.json
+  - Fallback handling for API failures
+  - Response parsing for Google Gemini format
+  - Database logging of AI interactions
+
+
+EXTERNAL APIs & SERVICES
+-------------------------
+1. Google Gemini AI API
+   - Purpose: Product recommendations, content generation
+   - Authentication: API Key
+   - Version: v1beta
+
+2. ImgBB API
+   - Purpose: Image hosting and management
+   - Configuration: Environment variable (IMGBB_API_KEY)
+   - Used for product image uploads
+
+3. Font Awesome CDN
+   - Purpose: Icon library
+   - Version: 7.0.1
+   - Delivery: CloudFlare CDN
+
+
+ARCHITECTURE PATTERNS
+---------------------
+Pattern: MVC (Model-View-Controller)
+
+Models (Sequelize ORM):
+  - admin.js - Admin user management
+  - ai_analysis_log.js - AI interaction logging
+  - category.js - Product categories
+  - index.js - Model initialization
+  - inventory_transaction.js - Stock movements
+  - item_variant.js - Product variants (sizes, SKUs)
+  - payment.js - Payment records
+  - product.js - Product catalog
+  - purchase.js - Purchase orders
+  - purchase_item.js - Purchase line items
+  - reservation.js - Customer reservations
+  - reservation_item.js - Reservation line items
+  - student.js - Student information
+
+Views (EJS Templates):
+  - AdminDashboard.ejs - Admin control panel
+  - AdminLogin.ejs - Admin authentication
+  - GiftstoreCatalog.ejs - Public product catalog
+  - SuperAdmin.ejs - Super admin management
+  - home.html - Landing page
+
+Controllers:
+  - CRUD.js - Main business logic controller
+    - Product management
+    - Reservation handling
+    - AI integration
+    - Batch upload (CSV)
+    - Analytics and reporting
+
+Routers:
+  - web.js - Route definitions and middleware
+
+
+KEY FEATURES & FUNCTIONALITY
+-----------------------------
+1. Product Management
+   - CRUD operations for products
+   - Product variants (sizes, SKUs)
+   - Category management
+   - Stock tracking
+   - Image management (ImgBB integration)
+   - Batch CSV upload
+
+2. Reservation System
+   - Customer reservations
+   - Cart functionality
+   - Variant selection
+   - Email-based reservations
+   - Reservation tracking
+
+3. Admin Dashboard
+   - Sales analytics
+   - Inventory management
+   - Pending payments
+   - Category management
+   - Product management
+   - Variant management
+   - Excel export functionality
+   - Batch product uploads
+
+4. Authentication & Authorization
+   - Admin login system
+   - Password hashing (bcrypt)
+   - Cookie-based sessions
+   - Super admin role
+   - Protected routes
+
+5. AI-Powered Features
+   - Dynamic product carousel
+   - Intelligent product recommendations
+   - Contextual product showcasing
+   - AI interaction logging
+
+6. Giftstore Catalog
+   - Responsive product grid
+   - Advanced filtering (category, price, stock)
+   - Search functionality
+   - Product details modal
+   - Shopping cart sidebar
+   - Variant selection (size chips)
+   - Real-time cart updates
+   - Reservation workflow
+
+
+DATABASE SCHEMA
+---------------
+Tables:
+  - admins - Admin user accounts
+  - ai_analysis_logs - AI request/response logging
+  - categories - Product categories
+  - inventory_transactions - Stock movement history
+  - item_variants - Product size/variant options
+  - payments - Payment records
+  - products - Product catalog
+  - purchases - Purchase orders
+  - purchase_items - Purchase line items
+  - reservations - Customer reservations
+  - reservation_items - Reserved products
+  - students - Student information
+
+
+COLOR SCHEME & DESIGN
+----------------------
+Primary Colors:
+  - Primary Green: #2a6b52
+  - Dark Green: #1e4d3a
+  - Accent Green: #469729
+  - Light Green: #5ab038
+
+Design System:
+  - Modern gradient backgrounds
+  - Card-based layouts
+  - Smooth transitions and animations
+  - Rounded corners (border-radius)
+  - Box shadows for depth
+  - Responsive grid systems
+  - Professional typography (Segoe UI)
+
+
+DEVELOPMENT WORKFLOW
+--------------------
+Version Control: Git
+Build Tool: None (vanilla JavaScript)
+Package Manager: npm
+Development Server: nodemon (auto-restart)
+Environment: Development (configurable for test/production)
+
+
+CONFIGURATION
+-------------
+Configuration File: config/config.json
+Environment Variables Supported:
+  - NODE_ENV - Environment (development/test/production)
+  - SUPERUSER_SECRET - Super admin password
+  - IMGBB_API_KEY - Image hosting API key
+  - AI_API_URL - AI service endpoint
+  - AI_API_KEY - AI service authentication
+  - AI_MODEL - AI model identifier
+
+Database Configuration:
+  - Development: MySQL on localhost
+  - Username: root
+  - Password: null (local development)
+  - Database: gcci_giftstore_database
+
+
+SECURITY FEATURES
+-----------------
+- Password hashing (bcrypt)
+- Environment-based secrets
+- Cookie-based session management
+- Server-side API key storage
+- Input validation
+- SQL injection protection (Sequelize ORM)
+- XSS prevention (EJS auto-escaping)
+
+
+DEPLOYMENT NOTES
+----------------
+Requirements:
+  - Node.js runtime
+  - MySQL database server
+  - Environment variables configured
+  - npm dependencies installed
+  
+Start Command: npm start
+Production Considerations:
+  - Set NODE_ENV=production
+  - Configure production database
+  - Set secure SUPERUSER_SECRET
+  - Configure API keys via environment
+  - Use process manager (PM2 recommended)
+
+
+================================================================================
+Document Generated: December 1, 2025
+System Version: 1.0.0
+================================================================================
