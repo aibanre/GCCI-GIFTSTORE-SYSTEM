@@ -12,9 +12,10 @@ let config = require(__dirname + '/../config/config.json')[env];
 function replaceEnvVars(obj) {
   if (typeof obj === 'string') {
     // Match ${VAR_NAME} pattern
-    return obj.replace(/\$\{([^}]+)\}/g, (match, varName) => {
+    const replaced = obj.replace(/\$\{([^}]+)\}/g, (match, varName) => {
       return process.env[varName] || match;
     });
+    return replaced;
   } else if (typeof obj === 'object' && obj !== null) {
     const newObj = Array.isArray(obj) ? [] : {};
     for (const key in obj) {
@@ -26,6 +27,23 @@ function replaceEnvVars(obj) {
 }
 
 config = replaceEnvVars(config);
+
+// Convert port to number if it's a string
+if (config.port && typeof config.port === 'string') {
+  config.port = parseInt(config.port, 10);
+}
+
+// Debug: Log database connection info in production
+if (env === 'production') {
+  console.log('Database config:', {
+    host: config.host,
+    port: config.port,
+    database: config.database,
+    username: config.username,
+    // Don't log password
+  });
+}
+
 const db = {};
 
 let sequelize;
