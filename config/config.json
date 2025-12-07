@@ -29,6 +29,40 @@
       "from": "GCCI Giftstore <gcci.giftstore@gmail.com>"
     }
   },
+  "production": {
+    "username": "${DB_USER}",
+    "password": "${DB_PASSWORD}",
+    "database": "${DB_NAME}",
+    "host": "${DB_HOST}",
+    "port": "${DB_PORT}",
+    "dialect": "mysql",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      },
+      "connectTimeout": 60000,
+      "timezone": "+08:00"
+    },
+    "timezone": "+08:00",
+    "pool": {
+      "max": 5,
+      "min": 0,
+      "acquire": 30000,
+      "idle": 10000
+    },
+    "superuserSecret": "${SUPERUSER_SECRET}",
+    "imgbbApiKey": "${IMGBB_API_KEY}",
+    "aiApiUrl": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+    "aiApiKey": "${AI_API_KEY}",
+    "aiModel": "gemini-2.0-flash",
+    "email": {
+      "service": "gmail",
+      "user": "${EMAIL_USER}",
+      "password": "${EMAIL_PASSWORD}",
+      "from": "GCCI Giftstore <${EMAIL_USER}>"
+    }
+  },
   "test": {
     "username": "root",
     "password": null,

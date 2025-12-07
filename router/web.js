@@ -4,6 +4,7 @@ const crudController = require('../controller/CRUD');
 const router = express.Router();
 const superUserAuth = crudController.superUserAuth;
 const adminAuth = crudController.adminAuth;
+const optionalAdminAuth = crudController.optionalAdminAuth;
 
 // Complete POS purchase (creates purchase and pending payment)
 router.post('/api/purchase/complete', crudController.completePOSPurchase);
@@ -111,8 +112,12 @@ router.post('/api/reservations', crudController.createReservation);
 // Get a single reservation by code
 router.get('/api/reservations/:code', crudController.getReservationByCode);
 
-// Cancel a reservation
-router.post('/api/reservations/:code/cancel', crudController.cancelReservation);
+// Cancel a reservation (optional admin auth to allow admin bypass)
+router.post('/api/reservations/:code/cancel', optionalAdminAuth, crudController.cancelReservation);
+
+// System configuration
+router.get('/api/config/:key', adminAuth, crudController.getSystemConfig);
+router.put('/api/config/:key', adminAuth, crudController.updateSystemConfig);
 
 // Regular reports (stock, reservations, sales)
 router.post('/api/reports/generate', adminAuth, crudController.generateReport);

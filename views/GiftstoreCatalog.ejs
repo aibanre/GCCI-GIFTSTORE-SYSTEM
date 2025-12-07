@@ -1363,7 +1363,11 @@
             <div class="carousel-container" id="newStockCarousel">
                 <div class="carousel-items" id="carouselItemsContainer">
                     <% if (carouselData.items && carouselData.items.length) { %>
-                        <% carouselData.items.forEach(function(product, idx) { %>
+                        <% carouselData.items.forEach(function(product, idx) { 
+                            const minReservationStock = product.MinReservationStock || 2;
+                            const availableForReservation = product.StockQuantity - minReservationStock;
+                            const canReserve = availableForReservation > 0;
+                        %>
                         <div class="carousel-item">
                             <img src="<%=
                                 product.ImagePath
@@ -1375,7 +1379,11 @@
                                 <div class="carousel-price">
                                     <span class="regular-price">₱<%= parseFloat(product.Price).toFixed(2) %></span>
                                 </div>
-                                <button class="carousel-add-to-cart" onclick="addToCart(<%= product.ItemID %>)">Add to cart</button>
+                                <% if (canReserve) { %>
+                                    <button class="carousel-add-to-cart" onclick="addToCart(<%= product.ItemID %>)">Add to cart</button>
+                                <% } else { %>
+                                    <button class="carousel-add-to-cart" disabled style="opacity: 0.5; cursor: not-allowed; background: #95a5a6;">Unavailable for Reservation</button>
+                                <% } %>
                             </div>
                         </div>
                         <% }); %>
@@ -1829,6 +1837,11 @@
                 }).join('') + '</div></div>';
             }
 
+            // Check if item is available for reservation
+            const minReservationStock = p.MinReservationStock || 2;
+            const availableForReservation = p.StockQuantity - minReservationStock;
+            const canReserve = availableForReservation > 0;
+
             return `
                 <div class="product-card" data-item-id="${p.ItemID}">
                     <img src="${formatImagePath(p)}" alt="${escapeHtml(p.ItemName||'')}" class="product-image">
@@ -1836,7 +1849,7 @@
                     <p class="product-price">₱${Number(p.Price||0).toFixed(2)}</p>
                     <p class="stock-count">${p.StockQuantity} in stock</p>
                     ${variantHtml}
-                    <button class="reserve-btn">Reserve</button>
+                    <button class="reserve-btn" ${!canReserve ? 'disabled style="opacity: 0.5; cursor: not-allowed; background: #95a5a6;"' : ''}>${canReserve ? 'Reserve' : 'Unavailable for Reservation'}</button>
                 </div>
             `;
         }).join('');
@@ -1855,7 +1868,11 @@
                 document.getElementById('modalProductImage').src = formatImagePath(product);
                 document.getElementById('modalProductPrice').textContent = '₱' + (Number(product.Price||0).toFixed(2));
                 document.getElementById('modalProductStock').textContent = product.StockQuantity + ' in stock';
-                document.getElementById('modalProductCategory').textContent = getCategoryName(product.CategoryID);
+                // Display all categories
+                const categoryText = (product.Categories && Array.isArray(product.Categories) && product.Categories.length > 0)
+                    ? product.Categories.map(c => c.CategoryName).join(', ')
+                    : getCategoryName(product.CategoryID);
+                document.getElementById('modalProductCategory').textContent = categoryText;
                 document.getElementById('modalProductDescription').textContent = product.Description || 'No description.';
                 const modal = document.getElementById('productDetailsModal');
                 modal.dataset.itemId = product.ItemID;
@@ -1928,11 +1945,25 @@
             if (!p) return false;
             if (q) {
                 const inName = String(p.ItemName||'').toLowerCase().includes(q);
-                const catName = getCategoryName(p.CategoryID).toLowerCase();
-                const inCat = catName.includes(q);
+                // Check all categories for search query
+                let inCat = false;
+                if (p.Categories && Array.isArray(p.Categories)) {
+                    inCat = p.Categories.some(cat => String(cat.CategoryName||'').toLowerCase().includes(q));
+                } else {
+                    const catName = getCategoryName(p.CategoryID).toLowerCase();
+                    inCat = catName.includes(q);
+                }
                 if (!inName && !inCat) return false;
             }
-            if (checkedCats.length && !checkedCats.includes(String(p.CategoryID))) return false;
+            // Check if product has any of the selected categories
+            if (checkedCats.length) {
+                if (p.Categories && Array.isArray(p.Categories) && p.Categories.length > 0) {
+                    const hasCategory = p.Categories.some(cat => checkedCats.includes(String(cat.CategoryID)));
+                    if (!hasCategory) return false;
+                } else if (!checkedCats.includes(String(p.CategoryID))) {
+                    return false;
+                }
+            }
             if (!isNaN(maxPrice) && Number(p.Price || 0) > maxPrice) return false;
             if (inStockChecked && !(Number(p.StockQuantity || 0) > 0)) return false;
             if (lowStockChecked && !(Number(p.StockQuantity || 0) < 10)) return false;
@@ -2034,6 +2065,25 @@
                 if(statusEl) {
                     statusEl.style.display = 'block';
                     if(nameDisplayEl) nameDisplayEl.textContent = data.student.full_name;
+                }
+                
+                // Check for pending reservation and show warning
+                if(data.hasPendingReservation && data.pendingReservation) {
+                    const warningHTML = `
+                        <div style="margin-top: 1rem; padding: 1rem; background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; border-radius: 6px;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <i class="fa-solid fa-exclamation-triangle" style="font-size: 1.2rem;"></i>
+                                <strong>Active Reservation Found</strong>
+                            </div>
+                            <p style="margin: 0; font-size: 0.9rem;">
+                                You have a ${data.pendingReservation.status} reservation (<strong>${data.pendingReservation.code}</strong>).
+                                <br>Please complete or cancel your existing reservation before creating a new one.
+                            </p>
+                        </div>
+                    `;
+                    if(statusEl) {
+                        statusEl.insertAdjacentHTML('afterend', warningHTML);
+                    }
                 }
                 
                 // Populate and enable name field (read-only)
@@ -2325,6 +2375,11 @@
                         <span class="reservation-code">Code: ${reservation.ReservationCode}</span>
                         <span class="reservation-status status-pending">${reservation.Status || 'Pending'}</span>
                     </div>
+                    ${reservation.StudentName && reservation.StudentIDNumber ? `
+                        <div style="padding: 0.5rem 0; font-size: 0.9rem; color: rgba(255,255,255,0.8);">
+                            <i class="fas fa-user"></i> ${reservation.StudentName} (${reservation.StudentIDNumber})
+                        </div>
+                    ` : ''}
                     ${canCancel ? `
                         <div class="cancel-timer">
                             <i class="fas fa-clock"></i>

@@ -6,7 +6,26 @@ const Sequelize = require('sequelize');
 const process = require('process');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.json')[env];
+let config = require(__dirname + '/../config/config.json')[env];
+
+// Replace environment variable placeholders in config
+function replaceEnvVars(obj) {
+  if (typeof obj === 'string') {
+    // Match ${VAR_NAME} pattern
+    return obj.replace(/\$\{([^}]+)\}/g, (match, varName) => {
+      return process.env[varName] || match;
+    });
+  } else if (typeof obj === 'object' && obj !== null) {
+    const newObj = Array.isArray(obj) ? [] : {};
+    for (const key in obj) {
+      newObj[key] = replaceEnvVars(obj[key]);
+    }
+    return newObj;
+  }
+  return obj;
+}
+
+config = replaceEnvVars(config);
 const db = {};
 
 let sequelize;

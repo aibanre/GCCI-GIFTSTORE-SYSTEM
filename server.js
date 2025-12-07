@@ -84,6 +84,14 @@ function startClaimDeadlineEmailJob() {
             
             for (const reservation of reservations) {
                 try {
+                    // Update status to Approved since cancel window has expired
+                    await db.Reservation.update(
+                        { Status: 'Approved' },
+                        { where: { ReservationID: reservation.ReservationID } }
+                    );
+                    
+                    console.log(`[ClaimDeadlineJob] Updated ${reservation.ReservationCode} to Approved status`);
+                    
                     // Get student info
                     const student = await db.Student.findByPk(reservation.StudentID);
                     if (!student || !student.Email || !student.Email.includes('@') || student.Email.includes('guest+')) {
@@ -182,7 +190,7 @@ function startAutoExpireReservationsJob() {
                                     QuantityChange: item.Quantity,
                                     Type: 'Restock',
                                     Reference: `Reservation ${reservation.ReservationCode} expired - Stock restored`,
-                                    AdminID: null,
+                                    AdminID: null, // System action, no admin
                                     Date: new Date()
                                 });
                             }

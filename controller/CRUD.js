@@ -139,7 +139,7 @@ async function completePOSPurchase(req, res) {
                     QuantityChange: -item.quantity,
                     Type: 'Sale',
                     Reference: `Payment ${payment.PaymentID} pending - Stock reserved`,
-                    AdminID: null,
+                    AdminID: (req.admin && req.admin.AdminID) || null,
                     Date: new Date()
                 };
                 // Optional VariantID support if column exists
@@ -170,6 +170,17 @@ async function confirmPayment(req, res) {
         
         // Update payment status
         await payment.update({ PaymentStatus: 'Confirmed' });
+        
+        // Update associated reservation to Completed if it exists
+        if (db.Purchase && db.Reservation) {
+            const purchase = await db.Purchase.findByPk(payment.PurchaseID);
+            if (purchase && purchase.ReservationID) {
+                await db.Reservation.update(
+                    { Status: 'Completed' },
+                    { where: { ReservationID: purchase.ReservationID } }
+                );
+            }
+        }
         
         // FIXED: Properly update inventory transactions for this specific payment
         if (db.Inventory_Transaction) {
@@ -226,7 +237,7 @@ async function rejectPayment(req, res) {
                         QuantityChange: pi.Quantity, // Positive because we're restoring stock
                         Type: 'Restock', // Payment rejected, stock restored
                         Reference: `Payment ${payment.PaymentID} rejected - Stock restored`,
-                        AdminID: null,
+                        AdminID: (req.admin && req.admin.AdminID) || null,
                         Date: new Date()
                     });
                 }
@@ -303,6 +314,24 @@ async function giftstoreCatalog(req, res) {
                 products = products.map(p => ({ ...p, Variants: variantsByItem[p.ItemID] || [] }));
             }
             
+            // Fetch product-category relationships
+            let productCategories = [];
+            if (db.sequelize.models.ProductCategory) {
+                productCategories = await db.sequelize.models.ProductCategory.findAll({ raw: true });
+            }
+            
+            categories = await db.Category.findAll({ order: [['CategoryID', 'ASC']], raw: true });
+            const categoryMap = {};
+            categories.forEach(c => { categoryMap[c.CategoryID] = c.CategoryName; });
+            
+            // Attach Categories array to each product
+            products = products.map(p => {
+                const productCats = productCategories
+                    .filter(pc => pc.ItemID === p.ItemID)
+                    .map(pc => ({ CategoryID: pc.CategoryID, CategoryName: categoryMap[pc.CategoryID] || '' }));
+                return { ...p, Categories: productCats };
+            });
+            
             // Get AI-powered carousel recommendations
             try {
                 carouselData = await getAICarouselRecommendation(products, req);
@@ -314,8 +343,6 @@ async function giftstoreCatalog(req, res) {
                     items: products.slice(0, 5)
                 };
             }
-            
-            categories = await db.Category.findAll({ order: [['CategoryID', 'ASC']], raw: true });
         }
         res.render('GiftstoreCatalog', { products, categories, carouselData });
     } catch (err) {
@@ -563,19 +590,35 @@ async function getProducts(req, res) {
             const hasIsActive = !!(db.Item.rawAttributes && db.Item.rawAttributes.IsActive);
             const whereClause = hasIsActive ? { IsActive: 1 } : undefined;
             const products = await db.Item.findAll({ where: whereClause, order: [['ItemID', 'DESC']], raw: true });
+            
+            // Fetch product-category relationships
+            let productCategories = [];
+            if (db.sequelize.models.ProductCategory) {
+                productCategories = await db.sequelize.models.ProductCategory.findAll({ raw: true });
+            }
+            
             const categories = await db.Category.findAll({ raw: true });
             const categoryMap = {};
             categories.forEach(c => { categoryMap[c.CategoryID] = c.CategoryName; });
-            const productsWithCategory = products.map(p => ({
-                ...p,
-                CategoryName: categoryMap[p.CategoryID] || ''
-            }));
+            
+            const productsWithCategory = products.map(p => {
+                // Get all categories for this product
+                const productCats = productCategories
+                    .filter(pc => pc.ItemID === p.ItemID)
+                    .map(pc => ({ CategoryID: pc.CategoryID, CategoryName: categoryMap[pc.CategoryID] || '' }));
+                
+                return {
+                    ...p,
+                    CategoryName: categoryMap[p.CategoryID] || '',
+                    Categories: productCats
+                };
+            });
             return res.json(productsWithCategory);
         }
         // Fallback to test data
         return res.json([
-            { ItemID: 1, ItemName: 'Test Product', Price: 100.00, StockQuantity: 10, CategoryID: 1, CategoryName: 'Books', Description: 'Test' },
-            { ItemID: 2, ItemName: 'Test Product 2', Price: 200.00, StockQuantity: 20, CategoryID: 1, CategoryName: 'Books', Description: 'Test 2' },
+            { ItemID: 1, ItemName: 'Test Product', Price: 100.00, StockQuantity: 10, CategoryID: 1, CategoryName: 'Books', Description: 'Test', Categories: [] },
+            { ItemID: 2, ItemName: 'Test Product 2', Price: 200.00, StockQuantity: 20, CategoryID: 1, CategoryName: 'Books', Description: 'Test 2', Categories: [] },
         ]);
     } catch (err) {
         console.error('GET /api/products error:', err);
@@ -587,7 +630,7 @@ async function getProducts(req, res) {
 async function createProduct(req, res) {
     try {
         const db = req.db;
-        const { ItemName, CategoryID, Price, StockQuantity, Description, ImagePath, AdminID } = req.body;
+        const { ItemName, CategoryID, CategoryIDs, Price, StockQuantity, Description, ImagePath, AdminID, MinReservationStock } = req.body;
         if (!ItemName || (typeof ItemName === 'string' && ItemName.trim() === '')) {
             return res.status(400).json({ error: 'Missing required field: ItemName' });
         }
@@ -599,30 +642,48 @@ async function createProduct(req, res) {
         }
         if (db && db.sequelize && db.Item) {
             await db.sequelize.sync();
-            let categoryIdInt = null;
-            if (CategoryID !== undefined && CategoryID !== null && CategoryID !== '') {
-                categoryIdInt = parseInt(CategoryID, 10);
-                if (isNaN(categoryIdInt)) {
-                    return res.status(400).json({ error: 'Invalid CategoryID' });
-                }
-                if (db && db.Category) {
-                    const found = await db.Category.findByPk(categoryIdInt);
+            
+            // Handle both single CategoryID (for backward compatibility) and multiple CategoryIDs
+            let categoryIds = [];
+            if (CategoryIDs && Array.isArray(CategoryIDs)) {
+                categoryIds = CategoryIDs.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+            } else if (CategoryID !== undefined && CategoryID !== null && CategoryID !== '') {
+                const catId = parseInt(CategoryID, 10);
+                if (!isNaN(catId)) categoryIds.push(catId);
+            }
+            
+            // Validate categories exist
+            if (categoryIds.length > 0 && db.Category) {
+                for (const catId of categoryIds) {
+                    const found = await db.Category.findByPk(catId);
                     if (!found) {
-                        return res.status(400).json({ error: `Category with ID ${categoryIdInt} does not exist` });
+                        return res.status(400).json({ error: `Category with ID ${catId} does not exist` });
                     }
                 }
             }
+            
             const hasIsActive = !!(db.Item.rawAttributes && db.Item.rawAttributes.IsActive);
             const payload = {
                 ItemName,
                 Description: Description || null,
                 Price: parseFloat(Price) || 0.0,
                 StockQuantity: parseInt(StockQuantity, 10) || 0,
-                CategoryID: categoryIdInt,
-                ImagePath: ImagePath || null
+                CategoryID: categoryIds.length > 0 ? categoryIds[0] : null, // Keep first category for backward compatibility
+                ImagePath: ImagePath || null,
+                MinReservationStock: MinReservationStock !== undefined ? parseInt(MinReservationStock, 10) : 2
             };
             if (hasIsActive) payload.IsActive = 1;
             const created = await db.Item.create(payload);
+
+            // Create product-category relationships
+            if (categoryIds.length > 0 && db.sequelize.models.ProductCategory) {
+                for (const catId of categoryIds) {
+                    await db.sequelize.models.ProductCategory.create({
+                        ItemID: created.ItemID,
+                        CategoryID: catId
+                    });
+                }
+            }
 
             // Log inventory transaction for new product
             if (db.Inventory_Transaction) {
@@ -631,7 +692,7 @@ async function createProduct(req, res) {
                     QuantityChange: parseInt(StockQuantity, 10),
                     Type: 'Add',
                     Reference: 'Product Added',
-                    AdminID: AdminID || null,
+                    AdminID: (req.admin && req.admin.AdminID) || AdminID || null,
                 });
             }
 
@@ -832,7 +893,7 @@ async function updateProduct(req, res) {
         if (isNaN(itemId)) {
             return res.status(400).json({ error: 'Invalid product ID' });
         }
-        const { ItemName, CategoryID, Price, StockQuantity, Description, ImagePath, AdminID } = req.body;
+        const { ItemName, CategoryID, CategoryIDs, Price, StockQuantity, Description, ImagePath, AdminID, MinReservationStock } = req.body;
         if (!ItemName || (typeof ItemName === 'string' && ItemName.trim() === '')) {
             return res.status(400).json({ error: 'Missing required field: ItemName' });
         }
@@ -847,6 +908,26 @@ async function updateProduct(req, res) {
             if (!product) {
                 return res.status(404).json({ error: 'Product not found' });
             }
+            
+            // Handle both single CategoryID and multiple CategoryIDs
+            let categoryIds = [];
+            if (CategoryIDs && Array.isArray(CategoryIDs)) {
+                categoryIds = CategoryIDs.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+            } else if (CategoryID !== undefined && CategoryID !== null && CategoryID !== '') {
+                const catId = parseInt(CategoryID, 10);
+                if (!isNaN(catId)) categoryIds.push(catId);
+            }
+            
+            // Validate categories exist
+            if (categoryIds.length > 0 && db.Category) {
+                for (const catId of categoryIds) {
+                    const found = await db.Category.findByPk(catId);
+                    if (!found) {
+                        return res.status(400).json({ error: `Category with ID ${catId} does not exist` });
+                    }
+                }
+            }
+            
             // Log inventory transaction if stock changes
             if (db.Inventory_Transaction && product.StockQuantity !== parseInt(StockQuantity, 10)) {
                 await db.Inventory_Transaction.create({
@@ -854,17 +935,36 @@ async function updateProduct(req, res) {
                     QuantityChange: parseInt(StockQuantity, 10) - product.StockQuantity,
                     Type: 'Edit',
                     Reference: 'Product Edit',
-                    AdminID: AdminID || null,
+                    AdminID: (req.admin && req.admin.AdminID) || AdminID || null,
                 });
             }
+            
             await product.update({
                 ItemName,
-                CategoryID: CategoryID || product.CategoryID,
+                CategoryID: categoryIds.length > 0 ? categoryIds[0] : product.CategoryID,
                 Price: parseFloat(Price) || 0.0,
                 StockQuantity: parseInt(StockQuantity, 10) || 0,
                 Description: Description || null,
-                ImagePath: ImagePath || null
+                ImagePath: ImagePath || null,
+                MinReservationStock: MinReservationStock !== undefined ? parseInt(MinReservationStock, 10) : product.MinReservationStock
             });
+            
+            // Update product-category relationships
+            if (categoryIds.length > 0 && db.sequelize.models.ProductCategory) {
+                // Delete existing relationships
+                await db.sequelize.models.ProductCategory.destroy({
+                    where: { ItemID: itemId }
+                });
+                
+                // Create new relationships
+                for (const catId of categoryIds) {
+                    await db.sequelize.models.ProductCategory.create({
+                        ItemID: itemId,
+                        CategoryID: catId
+                    });
+                }
+            }
+            
             return res.status(200).json({ success: true, product });
         }
         return res.status(500).json({ error: 'DB not configured' });
@@ -894,7 +994,7 @@ async function deactivateProduct(req, res) {
                 QuantityChange: 0,
                 Type: 'Deactivate',
                 Reference: 'Product Deactivated',
-                AdminID: AdminID || null,
+                AdminID: (req.admin && req.admin.AdminID) || AdminID || null,
                 Date: new Date()
             });
         }
@@ -925,7 +1025,7 @@ async function activateProduct(req, res) {
                 QuantityChange: 0,
                 Type: 'Activate',
                 Reference: 'Product Activated',
-                AdminID: AdminID || null,
+                AdminID: (req.admin && req.admin.AdminID) || AdminID || null,
                 Date: new Date()
             });
         }
@@ -943,9 +1043,13 @@ async function getCategories(req, res) {
         if (db && db.Category) {
             const categories = await db.Category.findAll({ order: [['CategoryID', 'ASC']], raw: true });
             let categoriesWithCounts = categories;
-            if (db && db.Item) {
+            
+            // Count items using the product_category junction table
+            if (db && db.sequelize.models.ProductCategory) {
                 categoriesWithCounts = await Promise.all(categories.map(async (c) => {
-                    const count = await db.Item.count({ where: { CategoryID: c.CategoryID } });
+                    const count = await db.sequelize.models.ProductCategory.count({ 
+                        where: { CategoryID: c.CategoryID } 
+                    });
                     return {
                         CategoryID: c.CategoryID,
                         CategoryName: c.CategoryName,
@@ -1227,7 +1331,7 @@ async function createPurchaseFromReservation(req, res) {
         // Create Payment (pending)
         const payment = await db.Payment.create({
             PurchaseID: purchase.PurchaseID,
-            PaymentRef: `RES-${reservationCode}-${Date.now()}`,
+            PaymentRef: `${reservationCode}-${Date.now()}`,
             AmountPaid: totalAmount,
             PaymentDate: new Date(),
             PaymentStatus: 'Pending'
@@ -1307,18 +1411,42 @@ async function createReservation(req, res) {
         let studentId = null;
         if (db.Student) {
             if (StudentEmail && StudentEmail.includes('@')) {
-                // find or create by email
-                let student = await db.Student.findOne({ where: { Email: StudentEmail } });
+                // Find or create by StudentIDNumber (unique per student), not email
+                // This allows same email to be used for different student IDs
+                let student = null;
+                if (StudentNumber) {
+                    student = await db.Student.findOne({ where: { StudentIDNumber: StudentNumber } });
+                }
+                
                 if (!student) {
-                    student = await db.Student.create({ FullName: StudentName || 'Guest', Email: StudentEmail, StudentIDNumber: StudentNumber });
+                    // Create new student record
+                    student = await db.Student.create({ 
+                        FullName: StudentName || 'Guest', 
+                        Email: StudentEmail, 
+                        StudentIDNumber: StudentNumber || `TEMP-${Date.now()}` 
+                    });
+                } else {
+                    // Update student info if changed
+                    const updates = {};
+                    if (StudentName && StudentName !== student.FullName) {
+                        updates.FullName = StudentName;
+                    }
+                    if (StudentEmail && StudentEmail !== student.Email) {
+                        updates.Email = StudentEmail;
+                    }
+                    if (Object.keys(updates).length > 0) {
+                        await student.update(updates);
+                    }
                 }
                 studentId = student.StudentID;
                 
-                // Anti-hoarding: Check for existing active reservations
+                // Anti-hoarding: Check for existing active reservations for this specific student ID
+                // Active = Pending or Approved (payment pending), not Completed or Canceled
+                const { Op } = require('sequelize');
                 const activeReservation = await db.Reservation.findOne({
                     where: { 
                         StudentID: studentId,
-                        Status: 'Pending'
+                        Status: { [Op.in]: ['Pending', 'Approved'] }
                     }
                 });
                 
@@ -1343,10 +1471,20 @@ async function createReservation(req, res) {
         // Create reservation and items in a transaction when available
         const code = 'RES-' + Math.random().toString(36).slice(2,9).toUpperCase();
         const now = new Date();
-        const cancelExpires = new Date(now.getTime() + 10*60*1000); // 10 minutes cancellation window
-        const claimDeadline = calculateClaimDeadline(cancelExpires); // 2 business days after cancel window
+        const cancelExpires = new Date(now.getTime() + 1*60*1000); // 1 minute cancellation window
+        const claimDeadline = new Date(cancelExpires.getTime() + 1*60*1000); // 1 minute claim deadline for testing
 
         const supportsReservationVariant = !!(db.Reservation_Item && db.Reservation_Item.rawAttributes && db.Reservation_Item.rawAttributes.VariantID);
+        
+        // Get global minimum reservation stock setting
+        let globalMinStock = 2; // default fallback
+        if (db.SystemConfig) {
+            const config = await db.SystemConfig.findOne({ where: { ConfigKey: 'global_min_reservation_stock' }, raw: true });
+            if (config && config.ConfigValue) {
+                globalMinStock = parseInt(config.ConfigValue, 10) || 2;
+            }
+        }
+        
         if (db.sequelize && typeof db.sequelize.transaction === 'function') {
             await db.sequelize.transaction(async (t) => {
                 // Check stock availability first
@@ -1356,9 +1494,11 @@ async function createReservation(req, res) {
                         throw new Error(`Item ${it.ItemID} not found`);
                     }
                     
-                    // Minimum stock threshold for reservations (keep at least 2 for walk-ins)
-                    const MIN_STOCK_FOR_RESERVATION = 2;
-                    const availableForReservation = item.StockQuantity - MIN_STOCK_FOR_RESERVATION;
+                    // Use item's MinReservationStock if set, otherwise use global setting
+                    const minReservationStock = (item.MinReservationStock !== null && item.MinReservationStock !== undefined) 
+                        ? item.MinReservationStock 
+                        : globalMinStock;
+                    const availableForReservation = item.StockQuantity - minReservationStock;
                     
                     if (availableForReservation < it.Quantity) {
                         if (item.StockQuantity < it.Quantity) {
@@ -1395,7 +1535,7 @@ async function createReservation(req, res) {
                             QuantityChange: -it.Quantity,
                             Type: 'Reservation',
                             Reference: `Reservation ${code} - Stock reserved`,
-                            AdminID: null,
+                            AdminID: (req.admin && req.admin.AdminID) || null,
                             Date: new Date()
                         }, { transaction: t });
                     }
@@ -1492,7 +1632,7 @@ async function createReservation(req, res) {
                         QuantityChange: -it.Quantity,
                         Type: 'Reservation',
                         Reference: `Reservation ${code} - Stock reserved`,
-                        AdminID: null,
+                        AdminID: (req.admin && req.admin.AdminID) || null,
                         Date: new Date()
                     });
                 }
@@ -2374,6 +2514,7 @@ async function listAdmins(req, res) {
         const sanitized = admins.map(a => ({
             AdminID: a.AdminID,
             Username: a.Username,
+            Name: a.Name,
             Role: a.Role,
             IsActive: !!a.IsActive,
             DateCreated: a.DateCreated,
@@ -2389,13 +2530,13 @@ async function createAdmin(req, res) {
     try {
         const db = req.db;
         if (!db || !db.Admin) return res.status(500).json({ error: 'DB not configured' });
-        const { Username, Password, Role } = req.body;
+        const { Username, Name, Password, Role } = req.body;
         if (!Username || !Password) return res.status(400).json({ error: 'Username and Password required' });
         const existing = await db.Admin.findOne({ where: { Username }, raw: true });
         if (existing) return res.status(400).json({ error: 'Username already exists' });
         const hash = await bcrypt.hash(String(Password), SALT_ROUNDS);
-        const created = await db.Admin.create({ Username: Username.trim(), PasswordHash: hash, Role: Role || 'admin' });
-        res.status(201).json({ success: true, admin: { AdminID: created.AdminID, Username: created.Username, Role: created.Role, IsActive: !!created.IsActive } });
+        const created = await db.Admin.create({ Username: Username.trim(), Name: Name || null, PasswordHash: hash, Role: Role || 'admin' });
+        res.status(201).json({ success: true, admin: { AdminID: created.AdminID, Username: created.Username, Name: created.Name, Role: created.Role, IsActive: !!created.IsActive } });
     } catch (err) {
         console.error('createAdmin error:', err);
         res.status(500).json({ error: 'Failed to create admin', details: err.message });
@@ -2408,13 +2549,22 @@ async function updateAdmin(req, res) {
         if (!db || !db.Admin) return res.status(500).json({ error: 'DB not configured' });
         const adminId = parseInt(req.params.id, 10);
         if (isNaN(adminId)) return res.status(400).json({ error: 'Invalid admin ID' });
-        const { Role, IsActive } = req.body;
+        const { Role, Name, IsActive } = req.body;
         const admin = await db.Admin.findByPk(adminId);
         if (!admin) return res.status(404).json({ error: 'Admin not found' });
-        await admin.update({
-            Role: Role !== undefined && Role !== null && Role !== '' ? Role : admin.Role,
-            IsActive: IsActive !== undefined && IsActive !== null ? (IsActive ? 1 : 0) : admin.IsActive
-        });
+        
+        const updateData = {};
+        if (Role !== undefined && Role !== null && Role !== '') {
+            updateData.Role = Role;
+        }
+        if (Name !== undefined) {
+            updateData.Name = Name;
+        }
+        if (IsActive !== undefined && IsActive !== null) {
+            updateData.IsActive = IsActive ? 1 : 0;
+        }
+        
+        await admin.update(updateData);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Failed to update admin', details: err.message });
@@ -2573,12 +2723,40 @@ async function verifyEnrolledStudent(req, res) {
         });
 
         if (student) {
+            // Check for pending reservations by StudentIDNumber or Email
+            let pendingReservation = null;
+            if (db.Student && db.Reservation) {
+                const { Op } = require('sequelize');
+                
+                // Find student record by StudentIDNumber
+                const studentRecord = await db.Student.findOne({
+                    where: { StudentIDNumber: studentId }
+                });
+                
+                if (studentRecord) {
+                    // Check for active reservations (Pending or Approved)
+                    pendingReservation = await db.Reservation.findOne({
+                        where: {
+                            StudentID: studentRecord.StudentID,
+                            Status: { [Op.in]: ['Pending', 'Approved'] }
+                        },
+                        order: [['DateReserved', 'DESC']]
+                    });
+                }
+            }
+            
             res.json({ 
                 success: true, 
                 student: {
                     school_id: student.school_id,
                     full_name: student.full_name
-                }
+                },
+                hasPendingReservation: !!pendingReservation,
+                pendingReservation: pendingReservation ? {
+                    code: pendingReservation.ReservationCode,
+                    status: pendingReservation.Status,
+                    dateReserved: pendingReservation.DateReserved
+                } : null
             });
         } else {
             res.json({ success: false, error: 'Student not found' });
@@ -2610,6 +2788,15 @@ function adminAuth(req, res, next) {
     next();
 }
 
+// Optional admin auth - populates req.admin if session exists but doesn't redirect
+function optionalAdminAuth(req, res, next) {
+    const sid = (req.cookies && req.cookies.admin_session) || null;
+    if (sid && adminSessions.has(sid)) {
+        req.admin = adminSessions.get(sid);
+    }
+    next();
+}
+
 async function adminLogin(req, res) {
     try {
         const { Username, Password } = req.body;
@@ -2622,7 +2809,7 @@ async function adminLogin(req, res) {
         if (!ok) return res.status(401).render('AdminLogin', { error: 'Invalid credentials' });
         await admin.update({ LastLoginAt: new Date() });
         const sessionId = crypto.randomBytes(24).toString('hex');
-        adminSessions.set(sessionId, { AdminID: admin.AdminID, Username: admin.Username, Role: admin.Role });
+        adminSessions.set(sessionId, { AdminID: admin.AdminID, Username: admin.Username, Name: admin.Name, Role: admin.Role });
         res.cookie('admin_session', sessionId, { httpOnly: true, sameSite: 'lax' });
         // Redirect superuser directly to SuperAdmin management page; others to dashboard
         if (admin.Role === 'superuser') {
@@ -2647,6 +2834,7 @@ function adminLogout(req, res) {
 }
 
 module.exports.adminAuth = adminAuth;
+module.exports.optionalAdminAuth = optionalAdminAuth;
 module.exports.adminLogin = adminLogin;
 module.exports.adminLoginPage = adminLoginPage;
 module.exports.adminLogout = adminLogout;
@@ -2711,12 +2899,25 @@ async function getReservationByCode(req, res) {
             });
         }
 
+        // Get student information
+        let studentName = 'Guest';
+        let studentIdNumber = '';
+        if (reservation.StudentID && db.Student) {
+            const student = await db.Student.findByPk(reservation.StudentID, { raw: true });
+            if (student) {
+                studentName = student.FullName || student.StudentName || 'Guest';
+                studentIdNumber = student.StudentIDNumber || '';
+            }
+        }
+
         res.json({
             ReservationCode: reservation.ReservationCode,
             ReservationID: reservation.ReservationID,
             Status: reservation.Status,
             DateReserved: reservation.DateReserved,
             CancelWindowExpires: reservation.CancelWindowExpires,
+            StudentName: studentName,
+            StudentIDNumber: studentIdNumber,
             Items: items
         });
     } catch (err) {
@@ -2742,14 +2943,17 @@ async function cancelReservation(req, res) {
             return res.status(404).json({ success: false, message: 'Reservation not found' });
         }
 
-        // Check if cancel window has expired
-        const now = new Date();
-        const cancelExpires = new Date(reservation.CancelWindowExpires);
-        if (now > cancelExpires) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Cancel window has expired. You can no longer cancel this reservation.' 
-            });
+        // Check if cancel window has expired (only for non-admin users)
+        const isAdmin = req.admin && req.admin.AdminID;
+        if (!isAdmin) {
+            const now = new Date();
+            const cancelExpires = new Date(reservation.CancelWindowExpires);
+            if (now > cancelExpires) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Cancel window has expired. You can no longer cancel this reservation.' 
+                });
+            }
         }
 
         // Update status to Canceled
@@ -2776,7 +2980,7 @@ async function cancelReservation(req, res) {
                             QuantityChange: item.Quantity,
                             Type: 'Restock',
                             Reference: `Reservation ${code} canceled - Stock restored`,
-                            AdminID: null,
+                            AdminID: (req.admin && req.admin.AdminID) || null,
                             Date: new Date()
                         });
                     }
@@ -2815,5 +3019,55 @@ async function cancelReservation(req, res) {
     }
 }
 
+// Get system configuration
+async function getSystemConfig(req, res) {
+    try {
+        const db = req.db;
+        if (!db || !db.SystemConfig) return res.status(500).json({ error: 'DB not configured' });
+        
+        const { key } = req.params;
+        const config = await db.SystemConfig.findOne({ where: { ConfigKey: key }, raw: true });
+        
+        if (!config) {
+            return res.status(404).json({ error: 'Configuration not found' });
+        }
+        
+        res.json(config);
+    } catch (err) {
+        console.error('GET /api/config/:key error:', err);
+        res.status(500).json({ error: 'Failed to fetch configuration', details: err.message });
+    }
+}
+
+// Update system configuration
+async function updateSystemConfig(req, res) {
+    try {
+        const db = req.db;
+        if (!db || !db.SystemConfig) return res.status(500).json({ error: 'DB not configured' });
+        
+        const { key } = req.params;
+        const { value } = req.body;
+        
+        if (value === undefined || value === null) {
+            return res.status(400).json({ error: 'Value is required' });
+        }
+        
+        const config = await db.SystemConfig.findOne({ where: { ConfigKey: key } });
+        
+        if (!config) {
+            return res.status(404).json({ error: 'Configuration not found' });
+        }
+        
+        await config.update({ ConfigValue: String(value) });
+        
+        res.json({ success: true, config });
+    } catch (err) {
+        console.error('PUT /api/config/:key error:', err);
+        res.status(500).json({ error: 'Failed to update configuration', details: err.message });
+    }
+}
+
 module.exports.cancelReservation = cancelReservation;
+module.exports.getSystemConfig = getSystemConfig;
+module.exports.updateSystemConfig = updateSystemConfig;
 

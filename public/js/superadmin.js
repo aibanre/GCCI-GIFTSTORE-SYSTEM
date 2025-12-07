@@ -16,7 +16,7 @@ function setSecretStatus(msg, ok=true){
 async function fetchAdmins(){
   const tbody = document.getElementById('adminsTableBody');
   if(!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem;"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; color:#469729;"></i><p style="margin:0.5rem 0 0 0;">Loading administrators...</p></td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem;"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; color:#469729;"></i><p style="margin:0.5rem 0 0 0;">Loading administrators...</p></td></tr>';
   try {
     const res = await fetch('/super/admins',{ headers: { 'x-superuser-secret': SUPER_SECRET || '' }});
     if(!res.ok) throw new Error('Failed to fetch admins ('+res.status+')');
@@ -26,20 +26,22 @@ async function fetchAdmins(){
     updateStatistics(data);
     
     const searchTerm = (document.getElementById('adminSearch')?.value || '').trim().toLowerCase();
-    const filtered = Array.isArray(data) ? data.filter(a => !searchTerm || a.Username.toLowerCase().includes(searchTerm) || a.Role.toLowerCase().includes(searchTerm)) : [];
+    const filtered = Array.isArray(data) ? data.filter(a => !searchTerm || a.Username.toLowerCase().includes(searchTerm) || a.Role.toLowerCase().includes(searchTerm) || (a.Name && a.Name.toLowerCase().includes(searchTerm))) : [];
     if(filtered.length === 0){
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem; color:#666;"><i class="fa-solid fa-users-slash" style="font-size:2rem; opacity:0.3;"></i><p style="margin:0.5rem 0 0 0;">No administrators found.</p></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:#666;"><i class="fa-solid fa-users-slash" style="font-size:2rem; opacity:0.3;"></i><p style="margin:0.5rem 0 0 0;">No administrators found.</p></td></tr>';
       return;
     }
     tbody.innerHTML = filtered.map(a => `
       <tr>
         <td><strong>#${a.AdminID}</strong></td>
         <td><i class="fa-solid fa-user"></i> ${escapeHtml(a.Username)}</td>
+        <td>${a.Name ? '<i class="fa-solid fa-id-card"></i> ' + escapeHtml(a.Name) : '<span style="color:#999; font-style:italic;">Not set</span>'}</td>
         <td><span class="${a.Role === 'superuser' ? 'badge-role badge-role-super' : 'badge-role'}">${escapeHtml(a.Role)}</span></td>
         <td>${a.IsActive ? '<span class="badge-active"><i class="fa-solid fa-check"></i> Active</span>' : '<span class="badge-inactive"><i class="fa-solid fa-times"></i> Inactive</span>'}</td>
         <td><i class="fa-solid fa-clock"></i> ${a.LastLoginAt ? new Date(a.LastLoginAt).toLocaleString() : '<span style="color:#999;">Never</span>'}</td>
         <td><i class="fa-solid fa-calendar"></i> ${a.DateCreated ? new Date(a.DateCreated).toLocaleString() : ''}</td>
         <td class="actions">
+          <button class="btn btn-sm btn-info edit-name-btn" data-id="${a.AdminID}" data-name="${escapeHtml(a.Name || '')}" title="Edit Full Name"><i class="fa-solid fa-id-card-alt"></i></button>
           <button class="btn btn-sm btn-warning edit-role-btn" data-id="${a.AdminID}" data-role="${a.Role}" title="Edit Role"><i class="fa-solid fa-user-edit"></i></button>
           <button class="btn btn-sm btn-danger deactivate-admin-btn" data-id="${a.AdminID}" data-active="${a.IsActive}" title="${a.IsActive ? 'Deactivate' : 'Activate'}"><i class="fa-solid fa-${a.IsActive ? 'user-slash' : 'user-check'}"></i></button>
         </td>
@@ -47,7 +49,7 @@ async function fetchAdmins(){
     `).join('');
     bindAdminActionButtons();
   } catch(err){
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem; color:#dc3545;"><i class="fa-solid fa-exclamation-triangle" style="font-size:2rem;"></i><p style="margin:0.5rem 0 0 0;">Error: '+escapeHtml(err.message)+'</p></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:#dc3545;"><i class="fa-solid fa-exclamation-triangle" style="font-size:2rem;"></i><p style="margin:0.5rem 0 0 0;">Error: '+escapeHtml(err.message)+'</p></td></tr>';
   }
 }
 
@@ -82,6 +84,22 @@ function animateValue(element, start, end, duration) {
 }
 
 function bindAdminActionButtons(){
+  document.querySelectorAll('.edit-name-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = parseInt(btn.getAttribute('data-id'),10);
+      const currentName = btn.getAttribute('data-name');
+      const newName = prompt('Enter full name (leave empty to clear):', currentName);
+      if(newName === null) return; // User cancelled
+      try {
+        const nameValue = newName.trim();
+        const res = await fetch('/super/admins/'+id,{ method:'PUT', headers:{ 'Content-Type':'application/json','x-superuser-secret':SUPER_SECRET}, body: JSON.stringify({ Name: nameValue === '' ? null : nameValue })});
+        const data = await res.json();
+        if(!data.success) throw new Error(data.error || 'Failed');
+        alert('Full name updated successfully');
+        fetchAdmins();
+      } catch(err){ alert('Update failed: '+err.message); }
+    });
+  });
   document.querySelectorAll('.edit-role-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = parseInt(btn.getAttribute('data-id'),10);
@@ -125,12 +143,13 @@ function initForms(){
       e.preventDefault();
       if(!SUPER_SECRET){ alert('Please set session secret first.'); return; }
       const Username = document.getElementById('newAdminUsername').value.trim();
+      const Name = document.getElementById('newAdminName').value.trim();
       const Password = document.getElementById('newAdminPassword').value;
       const Role = document.getElementById('newAdminRole').value;
       if(!Username || !Password){ alert('Username & Password required'); return; }
       if(Password.length < 6){ alert('Password must be at least 6 characters'); return; }
       try {
-        const res = await fetch('/super/admins',{ method:'POST', headers:{ 'Content-Type':'application/json','x-superuser-secret':SUPER_SECRET }, body: JSON.stringify({ Username, Password, Role })});
+        const res = await fetch('/super/admins',{ method:'POST', headers:{ 'Content-Type':'application/json','x-superuser-secret':SUPER_SECRET }, body: JSON.stringify({ Username, Name: Name || null, Password, Role })});
         const data = await res.json();
         if(!data.success) throw new Error(data.error || 'Failed');
         createForm.reset();

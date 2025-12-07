@@ -401,6 +401,10 @@
             <input type="text" id="newAdminUsername" class="form-control" placeholder="Enter username" required />
           </div>
           <div class="form-group">
+            <label><i class="fa-solid fa-id-card"></i> Full Name</label>
+            <input type="text" id="newAdminName" class="form-control" placeholder="Enter full name (optional)" />
+          </div>
+          <div class="form-group">
             <label><i class="fa-solid fa-lock"></i> Password</label>
             <input type="password" id="newAdminPassword" class="form-control" placeholder="Enter password" required />
           </div>
@@ -459,7 +463,7 @@
           <button class="btn btn-secondary" id="refreshAdminsBtn">
             <i class="fa-solid fa-sync"></i> Refresh
           </button>
-          <input type="text" id="adminSearch" class="form-control" placeholder="Search username or role..." style="max-width: 300px;" />
+          <input type="text" id="adminSearch" class="form-control" placeholder="Search username, name or role..." style="max-width: 300px;" />
         </div>
       </div>
       <table>
@@ -467,6 +471,7 @@
           <tr>
             <th><i class="fa-solid fa-hashtag"></i> ID</th>
             <th><i class="fa-solid fa-user"></i> Username</th>
+            <th><i class="fa-solid fa-id-card"></i> Full Name</th>
             <th><i class="fa-solid fa-user-tag"></i> Role</th>
             <th><i class="fa-solid fa-toggle-on"></i> Status</th>
             <th><i class="fa-solid fa-clock"></i> Last Login</th>
@@ -475,7 +480,7 @@
           </tr>
         </thead>
         <tbody id="adminsTableBody">
-          <tr><td colspan="7" style="text-align:center; padding:2rem; color:#666;">
+          <tr><td colspan="8" style="text-align:center; padding:2rem; color:#666;">
             <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; color:#469729;"></i>
             <p style="margin:0.5rem 0 0 0;">Loading administrators...</p>
           </td></tr>

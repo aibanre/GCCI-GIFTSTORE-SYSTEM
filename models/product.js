@@ -40,6 +40,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(255),
         allowNull: true,
       },
+      MinReservationStock: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 2,
+      },
     },
     {
       tableName: "item",
@@ -55,6 +60,12 @@ module.exports = (sequelize, DataTypes) => {
     Product.hasMany(models.Item_Variant, {
       foreignKey: 'ItemID',
       as: 'Variants'
+    });
+    Product.belongsToMany(models.Category, {
+      through: 'product_category',
+      foreignKey: 'ItemID',
+      otherKey: 'CategoryID',
+      as: 'Categories'
     });
   };
 

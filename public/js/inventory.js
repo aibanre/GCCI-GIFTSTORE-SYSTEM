@@ -48,7 +48,18 @@ async function fetchProducts() {
       .map((p) => {
         const variantList = Array.isArray(p.Variants) ? p.Variants : [];
         const variantCount = variantList.length;
-        const categoryName = categoryMap[p.CategoryID] || '';
+        
+        // Display all categories from the Categories array
+        let categoryDisplay = '';
+        if (p.Categories && Array.isArray(p.Categories) && p.Categories.length > 0) {
+          categoryDisplay = p.Categories.map(cat => 
+            `<span style="background:#e8ecef; padding:0.25rem 0.75rem; border-radius:12px; font-size:0.85rem; color:#546e7a; margin-right:0.25rem; display:inline-block; margin-bottom:0.25rem;">${cat.CategoryName}</span>`
+          ).join('');
+        } else {
+          // Fallback to old CategoryID if Categories array is empty
+          categoryDisplay = `<span style="background:#e8ecef; padding:0.25rem 0.75rem; border-radius:12px; font-size:0.85rem; color:#546e7a;">${categoryMap[p.CategoryID] || ''}</span>`;
+        }
+        
         const variantsRow = variantCount > 0
           ? `
             <tr class="variant-row" id="variantsRow-${p.ItemID}" style="display:none; background:#fafafa;">
@@ -93,7 +104,7 @@ async function fetchProducts() {
             ${String(p.ItemName || '')} 
             ${p.IsActive ? '' : '<span style="background:#e74c3c; color:white; padding:0.2rem 0.5rem; border-radius:12px; font-size:0.75rem; margin-left:0.5rem; font-weight:600;">Inactive</span>'}
           </td>
-          <td><span style="background:#e8ecef; padding:0.25rem 0.75rem; border-radius:12px; font-size:0.85rem; color:#546e7a;">${String(categoryName)}</span></td>
+          <td>${categoryDisplay}</td>
           <td style="font-weight: 600; color: #27ae60;">₱${parseFloat(p.Price || 0).toFixed(2)}</td>
           <td>
             ${p.StockQuantity < 5 
@@ -235,8 +246,17 @@ async function fetchProducts() {
                   <input type="text" id="editProductName" class="form-control" value="${product.ItemName}" required style="padding: 0.7rem; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 0.95rem;">
                 </div>
                 <div class="form-group">
-                  <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">Category <span style="color: #e74c3c;">*</span></label>
-                  ${renderCategoryDropdown(categories, product.CategoryID)}
+                  <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">
+                    Categories <span style="color: #e74c3c;">*</span>
+                    <small style="font-weight: 400; color: #7f8c8d;">(Hold Ctrl/Cmd to select multiple)</small>
+                  </label>
+                  <select id="editProductCategories" class="form-control" multiple required style="padding: 0.7rem; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 0.95rem; min-height: 120px;">
+                    ${categories.map(cat => {
+                      const isSelected = (product.Categories && product.Categories.some(pc => pc.CategoryID === cat.CategoryID)) 
+                        || String(cat.CategoryID) === String(product.CategoryID);
+                      return `<option value="${cat.CategoryID}"${isSelected ? ' selected' : ''}>${cat.CategoryName}</option>`;
+                    }).join('')}
+                  </select>
                 </div>
                 <div class="form-group">
                   <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">Price <span style="color: #e74c3c;">*</span></label>
@@ -250,6 +270,16 @@ async function fetchProducts() {
                   <input type="number" id="editProductStock" class="form-control" value="0" required style="padding: 0.7rem; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 0.95rem;" placeholder="Enter amount to add/remove">
                   <small style="color: #7f8c8d; font-size: 0.8rem; margin-top: 0.25rem; display: block;">
                     Positive to add stock, negative to remove
+                  </small>
+                </div>
+                <div class="form-group">
+                  <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">
+                    Min. Reservation Stock
+                    <i class="fas fa-info-circle" title="Minimum stock to keep for walk-ins. Items at or below this will not be available for reservation." style="color: #3498db; cursor: help;"></i>
+                  </label>
+                  <input type="number" id="editMinReservationStock" class="form-control" value="${product.MinReservationStock || 2}" min="0" required style="padding: 0.7rem; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 0.95rem;">
+                  <small style="color: #7f8c8d; font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+                    Stock reserved for walk-in customers
                   </small>
                 </div>
               </div>
@@ -486,12 +516,26 @@ async function fetchProducts() {
         }
       }
     
+    const categoriesSelect = document.getElementById('editProductCategories');
+    const selectedCategories = categoriesSelect ? Array.from(categoriesSelect.selectedOptions).map(opt => parseInt(opt.value, 10)) : [];
+    
+    if (selectedCategories.length === 0) {
+      alert('Please select at least one category');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHTML;
+        submitBtn.style.opacity = '1';
+      }
+      return;
+    }
+    
     const payload = {
       ItemName: document.getElementById('editProductName').value.trim(),
-      CategoryID: document.getElementById('editProductCategory').value,
+      CategoryIDs: selectedCategories,
       Price: document.getElementById('editProductPrice').value,
       StockQuantity: newStockQuantity,
       Description: document.getElementById('editProductDescription').value.trim(),
+      MinReservationStock: parseInt(document.getElementById('editMinReservationStock').value) || 2,
       AdminID: null // Optionally set admin ID
     };
     
@@ -606,6 +650,24 @@ async function initInventory() {
     });
   }
 
+  // Populate categories in add product form
+  async function populateAddProductCategories() {
+    try {
+      const response = await fetch('/api/categories');
+      if (response.ok) {
+        const categories = await response.json();
+        const select = document.getElementById('productCategories');
+        if (select && Array.isArray(categories)) {
+          select.innerHTML = categories.map(cat => 
+            `<option value="${cat.CategoryID}">${cat.CategoryName}</option>`
+          ).join('');
+        }
+      }
+    } catch (err) {
+      console.error('Error loading categories:', err);
+    }
+  }
+
   // Add product form submission
   const addProductForm = document.getElementById('addProductForm');
   if (addProductForm) {
@@ -613,9 +675,11 @@ async function initInventory() {
       e.preventDefault();
 
       const name = document.getElementById('productName')?.value.trim();
-      const category = document.getElementById('productCategory')?.value;
+      const categoriesSelect = document.getElementById('productCategories');
+      const selectedCategories = categoriesSelect ? Array.from(categoriesSelect.selectedOptions).map(opt => opt.value) : [];
       const price = document.getElementById('productPrice')?.value;
       const stock = document.getElementById('productStock')?.value;
+      const minReservationStock = document.getElementById('productMinReservationStock')?.value;
       const imageInput = document.getElementById('productImageInput');
       const description = document.getElementById('productDescription')?.value.trim();
 
@@ -623,8 +687,8 @@ async function initInventory() {
         alert('Please enter product name');
         return;
       }
-      if (category === 'Select a category' || !category) {
-        alert('Please select a category');
+      if (selectedCategories.length === 0) {
+        alert('Please select at least one category');
         return;
       }
       if (!price || price <= 0) {
@@ -638,9 +702,10 @@ async function initInventory() {
       // Build payload
       const payload = {
         ItemName: name,
-        CategoryID: category === 'Select a category' ? null : category,
+        CategoryIDs: selectedCategories,
         Price: parseFloat(price) || 0.0,
         StockQuantity: parseInt(stock, 10) || 0,
+        MinReservationStock: parseInt(minReservationStock, 10) || 2,
         Description: description || null,
         ImagePath: null,
       };
@@ -1060,4 +1125,85 @@ function removeImage() {
   if (preview) preview.innerHTML = '';
 }
 
-document.addEventListener('DOMContentLoaded', initInventory);
+// Load global settings
+async function loadGlobalSettings() {
+  try {
+    const response = await fetch('/api/config/global_min_reservation_stock');
+    if (response.ok) {
+      const data = await response.json();
+      const input = document.getElementById('globalMinReservationStock');
+      if (input && data.ConfigValue) {
+        input.value = data.ConfigValue;
+      }
+    }
+  } catch (err) {
+    console.error('Error loading global settings:', err);
+  }
+}
+
+// Save global settings
+async function saveGlobalSettings() {
+  const btn = document.getElementById('saveGlobalSettingsBtn');
+  const input = document.getElementById('globalMinReservationStock');
+  const originalBtnHTML = btn ? btn.innerHTML : '';
+  
+  if (!input) return;
+  
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Saving...';
+    }
+    
+    const value = parseInt(input.value, 10) || 0;
+    
+    const response = await fetch('/api/config/global_min_reservation_stock', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value: value })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      if (btn) {
+        btn.innerHTML = '<i class="fas fa-check" style="margin-right: 0.5rem;"></i>Saved!';
+        btn.style.background = 'linear-gradient(135deg, #27ae60 0%, #229954 100%)';
+      }
+      
+      setTimeout(() => {
+        alert('Global minimum reservation stock updated successfully!');
+        if (btn) {
+          btn.innerHTML = originalBtnHTML;
+          btn.style.background = 'linear-gradient(135deg, #f39c12 0%, #e67e22 100%)';
+          btn.disabled = false;
+        }
+      }, 500);
+    } else {
+      alert('Failed to save setting.');
+      if (btn) {
+        btn.innerHTML = originalBtnHTML;
+        btn.disabled = false;
+      }
+    }
+  } catch (err) {
+    console.error('Error saving global settings:', err);
+    alert('Error saving setting. Please try again.');
+    if (btn) {
+      btn.innerHTML = originalBtnHTML;
+      btn.disabled = false;
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  initInventory();
+  loadGlobalSettings();
+  populateAddProductCategories();
+  
+  // Attach save button handler
+  const saveGlobalBtn = document.getElementById('saveGlobalSettingsBtn');
+  if (saveGlobalBtn) {
+    saveGlobalBtn.addEventListener('click', saveGlobalSettings);
+  }
+});

@@ -29,7 +29,7 @@
       </div>
       <div class="sessionBar">
         <% if (adminUser) { %>
-          <span class="sessionUser"><i class="fas fa-user"></i> <%= adminUser.Username %></span>
+          <span class="sessionUser"><i class="fas fa-user"></i> <%= adminUser.Name ? adminUser.Name + ' (' + adminUser.Username + ')' : adminUser.Username %></span>
           <a href="/admin/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
         <% } else { %>
           <a href="/AdminLogin" class="logout-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
@@ -70,7 +70,6 @@
         <div id="dashboardSection">
           <div style="margin-bottom: 2rem;">
             <h2 style="font-size: 1.75rem; color: #2c3e50; margin: 0 0 0.5rem 0; font-weight: 600;">Dashboard Overview</h2>
-            <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">Welcome back! Here's what's happening with your store today.</p>
           </div>
           <div class="dashboard-stats">
             <div class="stat-card">
@@ -221,7 +220,6 @@
         <div class="form-container hidden" id="pendingPaymentsSection">
           <div style="margin-bottom: 2rem;">
             <h2 style="font-size: 1.75rem; color: #2c3e50; margin: 0 0 0.5rem 0; font-weight: 600;"><i class="fas fa-credit-card" style="margin-right: 0.75rem; color: #2a6b52;"></i>Pending Payments</h2>
-            <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">Manage and verify student payment confirmations</p>
           </div>
           
           <div style="background: white; padding: 1.75rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 2rem;">
@@ -281,7 +279,6 @@
         <div class="form-container hidden" id="inventorySection">
           <div style="margin-bottom: 2rem;">
             <h2 style="font-size: 1.75rem; color: #2c3e50; margin: 0 0 0.5rem 0; font-weight: 600;"><i class="fas fa-box" style="margin-right: 0.75rem; color: #2a6b52;"></i>Inventory Management</h2>
-            <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">Manage your products, categories, and inventory levels</p>
           </div>
           <div class="tab-container">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
@@ -406,6 +403,28 @@
               </div>
             </div>
 
+            <!-- Global Settings Panel -->
+            <div style="background: #fff3cd; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 2rem; border-left: 4px solid #f39c12;">
+              <h3 style="margin: 0 0 1rem 0; color: #2c3e50; font-size: 1.1rem; font-weight: 600;">
+                <i class="fas fa-cog" style="margin-right: 0.5rem; color: #f39c12;"></i>Global Reservation Settings
+              </h3>
+              <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center;">
+                <div>
+                  <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">
+                    Global Minimum Reservation Stock
+                    <i class="fas fa-info-circle" title="Default minimum stock for all items. Individual items can override this." style="color: #3498db; cursor: help; margin-left: 0.25rem;"></i>
+                  </label>
+                  <input type="number" id="globalMinReservationStock" class="form-control" value="2" min="0" style="max-width: 150px; padding: 0.7rem; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem;">
+                  <small style="color: #7f8c8d; font-size: 0.85rem; margin-top: 0.25rem; display: block;">
+                    Items at or below this stock cannot be reserved (unless item has custom threshold)
+                  </small>
+                </div>
+                <button type="button" id="saveGlobalSettingsBtn" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 500; height: fit-content;">
+                  <i class="fas fa-save" style="margin-right: 0.5rem;"></i>Save Setting
+                </button>
+              </div>
+            </div>
+
             <!-- Add New Product Tab -->
             <div class="tab-content" id="addProductTab">
               <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); max-width: 700px;">
@@ -417,12 +436,12 @@
                     <input type="text" class="form-control" id="productName" placeholder="Enter product name" required />
                   </div>
                   <div class="form-group">
-                    <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">Category <span style="color: #e74c3c;">*</span></label>
-                    <select class="form-control" id="productCategory" required>
-                      <option value="">Select a category</option>
-                      <option>Books</option>
-                      <option>Uniform</option>
-                      <option>College</option>
+                    <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">
+                      Categories <span style="color: #e74c3c;">*</span>
+                      <small style="font-weight: 400; color: #7f8c8d;">(Hold Ctrl/Cmd to select multiple)</small>
+                    </label>
+                    <select class="form-control" id="productCategories" multiple required style="min-height: 100px;">
+                      <!-- Categories will be populated dynamically -->
                     </select>
                   </div>
                   <div class="form-group">
@@ -432,6 +451,14 @@
                   <div class="form-group">
                     <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">Stock Quantity <span style="color: #e74c3c;">*</span></label>
                     <input type="number" class="form-control" id="productStock" placeholder="0" required />
+                  </div>
+                  <div class="form-group">
+                    <label style="font-weight: 600; color: #546e7a; margin-bottom: 0.5rem; display: block;">
+                      Min. Reservation Stock
+                      <i class="fas fa-info-circle" title="Minimum stock to keep for walk-ins. Items at or below this will not be available for reservation." style="color: #3498db; cursor: help;"></i>
+                    </label>
+                    <input type="number" class="form-control" id="productMinReservationStock" placeholder="2" value="2" min="0" />
+                    <small style="color: #7f8c8d; font-size: 0.8rem; margin-top: 0.25rem; display: block;">Stock reserved for walk-in customers</small>
                   </div>
                 </div>
                 <div class="form-group" style="margin-top: 1.5rem;">
@@ -602,7 +629,6 @@
             <h2 style="font-size: 1.75rem; color: #2c3e50; margin: 0 0 0.5rem 0; font-weight: 600;">
               <i class="fas fa-clock-rotate-left" style="margin-right: 0.75rem; color: #2a6b52;"></i>Manage Reservations
             </h2>
-            <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">Track and manage customer reservations</p>
           </div>
 
           <!-- Filters and Search -->
@@ -729,7 +755,6 @@
         <div class="form-container hidden" id="reportsSection">
           <div style="margin-bottom: 2rem;">
             <h2 style="font-size: 1.75rem; color: #2c3e50; margin: 0 0 0.5rem 0; font-weight: 600;"><i class="fas fa-chart-bar" style="margin-right: 0.75rem; color: #2a6b52;"></i>Reports & Analytics</h2>
-            <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">Generate comprehensive reports and AI-powered stock analysis</p>
           </div>
 
           <!-- Report Controls Card -->
@@ -816,7 +841,6 @@
         <div class="form-container hidden" id="posSystemSection">
           <div style="margin-bottom: 2rem;">
             <h2 style="font-size: 1.75rem; color: #2c3e50; margin: 0 0 0.5rem 0; font-weight: 600;"><i class="fas fa-cash-register" style="margin-right: 0.75rem; color: #2a6b52;"></i>Point of Sale System</h2>
-            <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">Process sales transactions quickly and efficiently</p>
           </div>
 
           <div class="pos-container">
