@@ -130,7 +130,7 @@ function openEditVariantModal(variantId) {
   if (!variant) return;
   const modal = document.getElementById('editVariantModal');
   if (!modal) return;
-  modal.classList.add('show');
+  modal.style.display = 'block';
   document.getElementById('editVariantID').value = variant.VariantID;
   document.getElementById('editVariantSize').value = variant.Size;
   document.getElementById('editVariantPrice').value = variant.Price != null ? variant.Price : '';
@@ -144,9 +144,13 @@ function initEditVariantModal() {
   const cancelBtn = document.getElementById('cancelEditVariant');
   const form = document.getElementById('editVariantForm');
   if (!modal || !form) return;
-  function close() { modal.classList.remove('show'); }
+  function close() { modal.style.display = 'none'; }
   if (closeBtn) closeBtn.onclick = close;
   if (cancelBtn) cancelBtn.onclick = close;
+  // Close modal when clicking outside
+  window.addEventListener('click', (e) => {
+    if (e.target === modal) close();
+  });
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const variantId = parseInt(document.getElementById('editVariantID').value, 10);
