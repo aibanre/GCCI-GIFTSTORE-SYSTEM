@@ -856,6 +856,7 @@ function showReservationModal(reservation) {
   
   const student = reservation.StudentName || 'Guest';
   const studentID = reservation.StudentIDNumber || '';
+  const studentEmail = reservation.StudentEmail || (reservation.Student && reservation.Student.Email) || '';
   const dateReserved = reservation.DateReserved ? new Date(reservation.DateReserved).toLocaleString() : '-';
   const cancelWindow = reservation.CancelWindowExpires ? new Date(reservation.CancelWindowExpires).toLocaleString() : '-';
   const claimDeadline = reservation.ClaimDeadline ? new Date(reservation.ClaimDeadline).toLocaleString() : '-';
@@ -881,6 +882,8 @@ function showReservationModal(reservation) {
       <div style="font-size: 0.85rem; color: #666;">Student</div>
       <div style="font-weight: 500;">${escapeHtml(student)}</div>
       ${studentID ? `<div style="font-size: 0.85rem; color: #666;">${escapeHtml(studentID)}</div>` : ''}
+      ${studentEmail ? `<div style="font-size: 0.85rem; color: #666; margin-top:0.25rem;">Email</div><div style="font-weight:500;">${escapeHtml(studentEmail)}</div>` : ''}
+      ${reservation.EmailHasOtherPending ? `<div style="margin-top:0.5rem; padding:0.5rem; border-radius:8px; background:#fff3cd; color:#856404; font-size:0.9rem;">This email is linked to another pending reservation. Please verify before approving.</div>` : ''}
     </div>
     <div style="display: flex; flex-direction: column; gap: 0.35rem;">
       <div style="font-size: 0.85rem; color: #666;">Status</div>

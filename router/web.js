@@ -111,6 +111,9 @@ router.get('/api/verify-student/:studentId', crudController.verifyEnrolledStuden
 
 router.get('/api/reservations', crudController.getReservations);
 
+// Check reservations by email (used by catalog to prevent duplicates)
+router.get('/api/reservations/check-email', crudController.checkReservationsByEmail);
+
 // Create a reservation (guest or student)
 router.post('/api/reservations', crudController.createReservation);
 

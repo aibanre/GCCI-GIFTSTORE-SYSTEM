@@ -1473,6 +1473,34 @@ async function createReservation(req, res) {
                         existingReservation: activeReservation.ReservationCode
                     });
                 }
+                // Additionally, ensure no other student account with the same email has an active reservation
+                try {
+                    const sequelize = db.Sequelize || require('sequelize');
+                    const emailLower = (StudentEmail || '').toLowerCase();
+                    const studentsWithEmail = await db.Student.findAll({
+                        where: sequelize.where(sequelize.fn('lower', sequelize.col('Email')), emailLower),
+                        attributes: ['StudentID'],
+                        raw: true
+                    });
+                    const otherStudentIds = studentsWithEmail.map(s => s.StudentID).filter(Boolean);
+                    if (otherStudentIds.length) {
+                        const otherActive = await db.Reservation.findOne({
+                            where: {
+                                StudentID: { [Op.in]: otherStudentIds },
+                                Status: { [Op.in]: ['Pending', 'Approved'] }
+                            }
+                        });
+                        if (otherActive) {
+                            return res.status(400).json({
+                                error: 'An active reservation already exists for this email. Please complete or cancel it before creating a new one.',
+                                existingReservation: otherActive.ReservationCode
+                            });
+                        }
+                    }
+                } catch (chkErr) {
+                    console.error('Error checking other students by email for active reservations:', chkErr);
+                    // fallthrough: allow reservation if check fails
+                }
             } else {
                 // create guest placeholder
                 const ts = Date.now();
@@ -1761,6 +1789,16 @@ async function getReservations(req, res) {
         const studentMap = {};
         students.forEach(s => { studentMap[s.StudentID] = s; });
 
+        // Build map of pending reservations per email for quick checks
+        const emailPendingCount = {};
+        reservations.forEach(r => {
+            const student = studentMap[r.StudentID];
+            const email = (student && (student.Email || student.email)) ? String((student.Email || student.email)).toLowerCase() : '';
+            if (!email) return;
+            if (!emailPendingCount[email]) emailPendingCount[email] = 0;
+            if ((r.Status || r.StatusID || 'Pending') === 'Pending') emailPendingCount[email]++;
+        });
+
         const mapped = reservations.map(r => {
             const itemsFor = resItems.filter(ri => ri.ReservationID === r.ReservationID).map(ri => ({
                 ItemID: ri.ItemID,
@@ -1769,12 +1807,24 @@ async function getReservations(req, res) {
                 Quantity: ri.Quantity
             }));
 
+            const student = studentMap[r.StudentID];
+            const email = (student && (student.Email || student.email)) ? String((student.Email || student.email)).toLowerCase() : '';
+            const pendingCountForEmail = email ? (emailPendingCount[email] || 0) : 0;
+
             return {
                 ReservationID: r.ReservationID,
                 ReservationCode: r.ReservationCode,
                 StudentID: r.StudentID,
                 StudentName: (studentMap[r.StudentID] && (studentMap[r.StudentID].FullName || studentMap[r.StudentID].StudentName)) || 'Guest',
                 StudentIDNumber: (studentMap[r.StudentID] && studentMap[r.StudentID].StudentIDNumber) || '',
+                StudentEmail: (studentMap[r.StudentID] && (studentMap[r.StudentID].Email || studentMap[r.StudentID].email)) || '',
+                Student: studentMap[r.StudentID] ? {
+                    Email: (studentMap[r.StudentID].Email || studentMap[r.StudentID].email) || '',
+                    FullName: (studentMap[r.StudentID] && (studentMap[r.StudentID].FullName || studentMap[r.StudentID].StudentName)) || '',
+                    StudentIDNumber: (studentMap[r.StudentID] && studentMap[r.StudentID].StudentIDNumber) || ''
+                } : null,
+                // True if this reservation's email has other pending reservations (excluding this one)
+                EmailHasOtherPending: email ? (pendingCountForEmail > ((r.Status || r.StatusID || 'Pending') === 'Pending' ? 1 : 0)) : false,
                 DateReserved: r.DateReserved || r.CreatedAt || null,
                 CancelWindowExpires: r.CancelWindowExpires || null,
                 ClaimDeadline: r.ClaimDeadline || null,
@@ -1791,6 +1841,45 @@ async function getReservations(req, res) {
 }
 
 module.exports.getReservations = getReservations;
+
+// Check whether an email already has active (Pending/Approved) reservations
+async function checkReservationsByEmail(req, res) {
+    try {
+        const db = req.db;
+        if (!db || !db.Student || !db.Reservation) return res.status(500).json({ error: 'DB not configured' });
+        const rawEmail = String(req.query.email || '').trim();
+        if (!rawEmail || !rawEmail.includes('@')) return res.json({ hasActive: false, count: 0, reservationCodes: [] });
+
+        const emailLower = rawEmail.toLowerCase();
+        const sequelize = db.Sequelize || require('sequelize');
+
+        // Find students with matching email (case-insensitive)
+        const students = await db.Student.findAll({
+            where: sequelize.where(sequelize.fn('lower', sequelize.col('Email')), emailLower),
+            raw: true
+        });
+        const studentIds = students.map(s => s.StudentID).filter(Boolean);
+        if (!studentIds.length) return res.json({ hasActive: false, count: 0, reservationCodes: [] });
+
+        const { Op } = require('sequelize');
+        const activeReservations = await db.Reservation.findAll({
+            where: {
+                StudentID: { [Op.in]: studentIds },
+                Status: { [Op.in]: ['Pending', 'Approved'] }
+            },
+            attributes: ['ReservationCode','ReservationID','Status'],
+            raw: true
+        });
+
+        const reservationCodes = activeReservations.map(r => r.ReservationCode);
+        return res.json({ hasActive: reservationCodes.length > 0, count: reservationCodes.length, reservationCodes });
+    } catch (err) {
+        console.error('GET /api/reservations/check-email error:', err);
+        return res.status(500).json({ error: 'Failed to check reservations by email' });
+    }
+}
+
+module.exports.checkReservationsByEmail = checkReservationsByEmail;
 
 // Generate an AI-driven stock report by calling an external AI API configured in app settings
 async function generateAiStockReport(req, res) {

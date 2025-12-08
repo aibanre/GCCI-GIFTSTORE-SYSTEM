@@ -137,6 +137,14 @@ function openEditVariantModal(variantId) {
   const modal = document.getElementById('editVariantModal');
   console.log('[openEditVariantModal] modal element present=', !!modal);
   if (!modal) return;
+  // Ensure modal is attached to document.body so it's not hidden by tab containers
+  try {
+    if (modal.parentElement !== document.body) {
+      document.body.appendChild(modal);
+    }
+  } catch (e) {
+    console.warn('Could not move variant modal to document.body:', e);
+  }
   modal.style.display = 'block';
   document.getElementById('editVariantID').value = variant.VariantID;
   document.getElementById('editVariantSize').value = variant.Size;

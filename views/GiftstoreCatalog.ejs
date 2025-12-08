@@ -1775,7 +1775,7 @@
             const imageSrc = formatImagePath(prod);
             const variantIdForJs = ci.VariantID != null ? `'${ci.VariantID}'` : 'null';
             totalItems += ci.Quantity; totalAmount += itemTotal;
-            return `<div class="cart-item" data-item-id="${ci.ItemID}" data-variant-id="${ci.VariantID||""}">>
+            return `<div class="cart-item" data-item-id="${ci.ItemID}" data-variant-id="${ci.VariantID||""}">
                 <img src="${imageSrc}" alt="${escapeHtml(itemName)}" class="cart-item-image">
                 <div class="cart-item-details">
                     <p class="cart-item-name">${escapeHtml(itemName)}</p>
@@ -2098,6 +2098,11 @@
                     emailInput.placeholder = 'your.email@example.com';
                     emailInput.focus();
                 }
+
+                // Trigger an email check to pre-populate any warning
+                if (emailInput && emailInput.value) {
+                    checkEmailForActiveReservation(emailInput.value);
+                }
                 
                 // Enable submit button
                 if(submitBtn) submitBtn.disabled = false;
@@ -2173,18 +2178,59 @@
     });
     document.getElementById('cancelReservationConfirmBtn')?.addEventListener('click', function(){ document.getElementById('reservationConfirmModal').style.display = 'none'; });
     document.getElementById('closeReservationConfirmModal')?.addEventListener('click', function(){ document.getElementById('reservationConfirmModal').style.display = 'none'; });
+    
+    // Helper: debounce
+    function debounce(fn, wait) {
+        let t;
+        return function(...args) {
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(this, args), wait);
+        };
+    }
+
+    // Check email and show/hide submission error (used on blur/input)
+    async function checkEmailForActiveReservation(email) {
+        const errEl = document.getElementById('reservationSubmitError');
+        if (!email || !email.includes('@')) {
+            if (errEl) errEl.textContent = '';
+            return;
+        }
+        try {
+            const resp = await fetch('/api/reservations/check-email?email=' + encodeURIComponent(email));
+            if (!resp.ok) return;
+            const data = await resp.json();
+            if (data && data.hasActive) {
+                const codes = (data.reservationCodes || []).join(', ');
+                if (errEl) errEl.textContent = `An active reservation already exists for this email (${codes}). Please complete or cancel it before creating a new one.`;
+            } else {
+                if (errEl) errEl.textContent = '';
+            }
+        } catch (err) {
+            console.warn('Email check failed', err);
+        }
+    }
+
+    // Wire input listeners for immediate feedback
+    (function attachEmailListeners(){
+        const emailInput = document.getElementById('resEmail');
+        if (!emailInput) return;
+        const debounced = debounce((e) => checkEmailForActiveReservation(e.target.value), 500);
+        emailInput.addEventListener('input', debounced);
+        emailInput.addEventListener('blur', function(e){ checkEmailForActiveReservation(e.target.value); });
+    })();
     document.getElementById('reservationConfirmModal')?.addEventListener('click', function(e){ if (e.target && e.target.id === 'reservationConfirmModal') document.getElementById('reservationConfirmModal').style.display = 'none'; });
     document.getElementById('submitReservationBtn')?.addEventListener('click', async function(e){
         e.preventDefault();
-        
+
         if(!studentVerified || !verifiedStudentData) {
             alert('Please verify your student ID first');
             return;
         }
-        
+
         const nameEl = document.getElementById('resName');
         const emailEl = document.getElementById('resEmail');
         const studentEl = document.getElementById('resStudentNumber');
+        
         const name = nameEl?.value?.trim() || '';
         const email = emailEl?.value?.trim() || '';
         const studentNo = studentEl?.value?.trim() || '';
@@ -2211,6 +2257,43 @@
         }
         if (hasError) return;
 
+        // Pre-check: ensure the email doesn't already have an active reservation
+        try {
+            const checkResp = await fetch('/api/reservations/check-email?email=' + encodeURIComponent(email));
+            if (checkResp.ok) {
+                const checkData = await checkResp.json();
+                if (checkData && checkData.hasActive) {
+                    // Show a non-blocking but prominent warning inside the reservation modal
+                    const codes = (checkData.reservationCodes || []).map(c => `<strong>${escapeHtml(c)}</strong>`).join(', ');
+                    const warningHTML = `
+                        <div id="reservationEmailWarning" style="margin-top: 1rem; padding: 1rem; background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; border-radius: 6px;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <i class="fa-solid fa-exclamation-triangle" style="font-size: 1.2rem;"></i>
+                                <strong>Active Reservation Found</strong>
+                            </div>
+                            <p style="margin: 0; font-size: 0.9rem;">
+                                This email already has ${checkData.count} active reservation(s): ${codes}.
+                                Please complete or cancel your existing reservation(s) before creating a new one.
+                            </p>
+                        </div>
+                    `;
+                    const content = document.getElementById('reservationConfirmContent');
+                    if (content) {
+                        // remove previous warning if present
+                        const prev = document.getElementById('reservationEmailWarning');
+                        if (prev) prev.remove();
+                        content.querySelector('.modal-body')?.insertAdjacentHTML('afterbegin', warningHTML);
+                    }
+                    // abort submission so user can resolve existing reservation
+                    if (btn) { btn.disabled = false; if (prevText) btn.textContent = prevText; }
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to check existing reservations by email:', e);
+            // allow submission if check fails
+        }
+
         // Build payload
         const payload = {
             Items: reservationCart.map(i => ({ ItemID: i.ItemID, Quantity: i.Quantity, VariantID: i.VariantID || null })),
@@ -2225,7 +2308,7 @@
             if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
             const resp = await fetch('/api/reservations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             const data = await resp.json();
-            if (data && data.success) {
+            if (resp.ok && data && data.success) {
                 // Store reservation code in localStorage to track user's reservations
                 const reservationCode = data.code || data.reservationId;
                 const userReservations = JSON.parse(localStorage.getItem('userReservations') || '[]');
@@ -2248,7 +2331,18 @@
                 if (emailEl) emailEl.value = '';
                 if (studentEl) studentEl.value = '';
             } else {
-                document.getElementById('reservationSubmitError').textContent = 'Failed to create reservation.';
+                // Show server-provided error message inside the modal
+                const errEl = document.getElementById('reservationSubmitError');
+                const errMsg = (data && (data.error || data.message)) ? (data.error || data.message) : 'Failed to create reservation.';
+                if (errEl) errEl.textContent = errMsg;
+
+                // If server returned an existing reservation code, also populate the bottom error
+                const existing = data && (data.existingReservation || data.existingReservations || data.reservationCodes);
+                if (existing) {
+                    const codes = Array.isArray(existing) ? existing : [existing];
+                    const errEl = document.getElementById('reservationSubmitError');
+                    if (errEl) errEl.textContent = `An active reservation already exists for this email (${codes.join(', ')}). Please complete or cancel it before creating a new one.`;
+                }
             }
         } catch (err) {
             console.error('Create reservation error', err);
