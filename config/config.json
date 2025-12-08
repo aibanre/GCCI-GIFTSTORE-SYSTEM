@@ -30,11 +30,11 @@
     }
   },
   "production": {
-    "username": "root",
-    "password": null,
-    "database": "gcci_giftstore_database",
-    "host": "127.0.0.1",
-    "port": 3306,
+    "username": "${DB_USER}",
+    "password": "${DB_PASSWORD}",
+    "database": "${DB_NAME}",
+    "host": "${DB_HOST}",
+    "port": "${DB_PORT}",
     "dialect": "mysql",
     "dialectOptions": {
       "connectTimeout": 60000,
@@ -47,16 +47,16 @@
       "acquire": 30000,
       "idle": 10000
     },
-    "superuserSecret": "12345",
-    "imgbbApiKey": "446b17a5b28da616a35b4db4798db6c2",
-    "aiApiUrl": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
-    "aiApiKey": "AIzaSyBYYSSaCO7NeeaGLDJt_cy89zpRvsmkX6A",
-    "aiModel": "gemini-2.0-flash",
+    "superuserSecret": "${SUPERUSER_SECRET}",
+    "imgbbApiKey": "${IMGBB_API_KEY}",
+    "aiApiUrl": "${AI_API_URL}",
+    "aiApiKey": "${AI_API_KEY}",
+    "aiModel": "${AI_MODEL}",
     "email": {
       "service": "gmail",
-      "user": "gcci.giftstore@gmail.com",
-      "password": "dggapxockfgikmxr",
-      "from": "GCCI Giftstore <gcci.giftstore@gmail.com>"
+      "user": "${EMAIL_USER}",
+      "password": "${EMAIL_PASSWORD}",
+      "from": "${EMAIL_FROM}"
     }
   },
   "test": {
